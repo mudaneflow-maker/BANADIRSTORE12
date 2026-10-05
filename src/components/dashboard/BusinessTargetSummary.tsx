@@ -16,19 +16,32 @@ export const BusinessTargetSummary: React.FC<{ engine: EngineResult }> = ({ engi
   const isShortfall = todayDiff < 0;
 
   return (
-    <section aria-label="Business target" className="dashboard-panel border border-border bg-card p-4 sm:p-5 space-y-4">
+    <section
+      aria-label="Business target"
+      className="dashboard-panel border border-border bg-card p-4 sm:p-5 space-y-4"
+    >
       <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border pb-3">
         <div>
-          <h2 className="dashboard-heading text-base font-semibold text-foreground">Business Financial Target</h2>
+          <h2 className="dashboard-heading text-base font-semibold text-foreground">
+            Business Financial Target
+          </h2>
           <p className="text-xs text-muted-foreground">
-            Bisha: <span className="font-semibold text-foreground">{c?.monthKey ?? "—"}</span> · Target-ka Bisha:{" "}
+            Bisha: <span className="font-semibold text-foreground">{c?.monthKey ?? "—"}</span> ·
+            Target-ka Bisha:{" "}
             <span className="font-semibold text-foreground">{money(c?.monthlyTarget ?? 93.5)}</span>
           </p>
         </div>
         <div className="flex items-center gap-2 text-xs">
-          <span className="text-muted-foreground">Maalmaha Harsan:</span>
-          <strong className="rounded bg-accent px-2 py-0.5 font-bold text-foreground">
-            {engine.remainingCalendarDays} maalmood
+          <span className="text-muted-foreground font-medium">Maalmaha Harsan:</span>
+          <strong className="rounded-lg bg-[#F7B928] px-2.5 py-1 font-black text-[#071A3E] shadow-2xs">
+            {Number.isFinite(engine?.remainingCalendarDays)
+              ? engine.remainingCalendarDays
+              : Math.max(
+                  0,
+                  new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0).getDate() -
+                    new Date().getDate(),
+                )}{" "}
+            maalmood
           </strong>
         </div>
       </div>
@@ -36,7 +49,9 @@ export const BusinessTargetSummary: React.FC<{ engine: EngineResult }> = ({ engi
       {/* TODAY'S TARGET HERO ROW */}
       <div className="rounded-lg border border-primary/30 bg-primary/5 p-4">
         <div className="flex flex-wrap items-baseline justify-between gap-2">
-          <span className="text-xs font-bold uppercase tracking-wider text-primary">Today's Final Target</span>
+          <span className="text-xs font-bold uppercase tracking-wider text-primary">
+            Today's Final Target
+          </span>
           <span className="text-xs text-muted-foreground font-mono">
             Default ${t?.defaultDailyTarget.toFixed(4)} + Burden ${t?.activeBurden.toFixed(4)}
             {t && t.surplusReduction > 0 ? ` - Dheeri $${t.surplusReduction.toFixed(4)}` : ""}
@@ -60,8 +75,8 @@ export const BusinessTargetSummary: React.FC<{ engine: EngineResult }> = ({ engi
               {isSurplus
                 ? `+${money(todayDiff)} (DHEERI)`
                 : isShortfall
-                ? `-${money(Math.abs(todayDiff))} (DHIMAN)`
-                : "LA GAARAY"}
+                  ? `-${money(Math.abs(todayDiff))} (DHIMAN)`
+                  : "LA GAARAY"}
             </strong>
           </div>
         </div>
@@ -77,7 +92,9 @@ export const BusinessTargetSummary: React.FC<{ engine: EngineResult }> = ({ engi
         </div>
         <div className="border border-border p-2.5">
           <div className="dashboard-kicker text-muted-foreground">Today's Burden</div>
-          <div className={`mt-1 font-mono text-sm font-semibold ${t && t.activeBurden > 0 ? "text-destructive" : "text-foreground"}`}>
+          <div
+            className={`mt-1 font-mono text-sm font-semibold ${t && t.activeBurden > 0 ? "text-destructive" : "text-foreground"}`}
+          >
             +${(t?.activeBurden ?? 0).toFixed(4)}
           </div>
         </div>
@@ -89,7 +106,9 @@ export const BusinessTargetSummary: React.FC<{ engine: EngineResult }> = ({ engi
         </div>
         <div className="border border-border p-2.5">
           <div className="dashboard-kicker text-muted-foreground">Current Monthly Burden</div>
-          <div className={`mt-1 font-semibold ${engine.currentMonthlyBurden > 0 ? "text-destructive" : "text-foreground"}`}>
+          <div
+            className={`mt-1 font-semibold ${engine.currentMonthlyBurden > 0 ? "text-destructive" : "text-foreground"}`}
+          >
             {money(engine.currentMonthlyBurden)}
           </div>
         </div>

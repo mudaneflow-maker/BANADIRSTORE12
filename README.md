@@ -31,6 +31,7 @@ docker compose up -d
 ```
 
 This starts:
+
 1. PostgreSQL database with persistent volume.
 2. Node.js backend application on port 3000.
 

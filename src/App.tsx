@@ -51,7 +51,18 @@ import { canAccess, useStaffRole, ROLE_LABELS } from "./lib/roles";
 import { ImageLibraryView } from "./components/views/ImageLibraryView";
 
 const MainApp: React.FC = () => {
-  const { convertOrderToSale, getOrderByPortalToken, registerExternalOrder, orders, products, sales, purchases, expenses, incomes, accounts } = useStore();
+  const {
+    convertOrderToSale,
+    getOrderByPortalToken,
+    registerExternalOrder,
+    orders,
+    products,
+    sales,
+    purchases,
+    expenses,
+    incomes,
+    accounts,
+  } = useStore();
   const staffRole = useStaffRole();
   const [activeTab, setActiveTab] = useState<NavSection>("dashboard");
   // Sidebar wuu xirnaanayaa marka hore — wuxuu furmayaa oo kaliya marka badhanka Menu la riixo
@@ -283,10 +294,18 @@ const MainApp: React.FC = () => {
     setIsSidebarOpen(false);
   };
 
-  const openingNeeded = typeof window !== 'undefined' && localStorage.getItem('benadir_opening_complete_v1') !== 'true' &&
-    (localStorage.getItem('benadir_factory_reset_done') === 'true' ||
-      (!products.length && !orders.length && !sales.length && !purchases.length && !expenses.length && !incomes.length && accounts.every(a => a.balance === 0)));
-  if (openingNeeded && staffRole === 'owner') return <OpeningBalances />;
+  const openingNeeded =
+    typeof window !== "undefined" &&
+    localStorage.getItem("benadir_opening_complete_v1") !== "true" &&
+    (localStorage.getItem("benadir_factory_reset_done") === "true" ||
+      (!products.length &&
+        !orders.length &&
+        !sales.length &&
+        !purchases.length &&
+        !expenses.length &&
+        !incomes.length &&
+        accounts.every((a) => a.balance === 0)));
+  if (openingNeeded && staffRole === "owner") return <OpeningBalances />;
 
   return (
     <div className="flex h-screen bg-[#f8fafc] text-slate-800 antialiased overflow-hidden selection:bg-[#bef264] selection:text-black">
@@ -327,103 +346,198 @@ const MainApp: React.FC = () => {
             <div className="max-w-md mx-auto mt-24 text-center space-y-2 p-6">
               <ShieldOff className="w-10 h-10 mx-auto text-slate-400" />
               <h2 className="font-extrabold text-slate-900">No access</h2>
-              <p className="text-sm text-slate-500">Your role ({ROLE_LABELS[staffRole]}) can't open this section. Ask the owner if you need it.</p>
+              <p className="text-sm text-slate-500">
+                Your role ({ROLE_LABELS[staffRole]}) can't open this section. Ask the owner if you
+                need it.
+              </p>
             </div>
-          ) : (<>
-          {activeTab === "insights" && <StockInsightsView />}
-          {activeTab === "library" && (
-            <ImageLibraryView
-              onCreateProductWithImage={() => {
-                setActiveTab("products");
-                setIsNewProductOpen(true);
-              }}
-            />
+          ) : (
+            <>
+              {activeTab === "insights" && <StockInsightsView />}
+              {activeTab === "library" && (
+                <ImageLibraryView
+                  onCreateProductWithImage={() => {
+                    setActiveTab("products");
+                    setIsNewProductOpen(true);
+                  }}
+                />
+              )}
+              {activeTab === "dashboard" && (
+                <DashboardView
+                  onNavigate={setActiveTab}
+                  onOpenNewSale={openNewRecord}
+                  onOpenNewExpense={() => setIsNewExpenseOpen(true)}
+                  onOpenNewIncome={() => setIsNewIncomeOpen(true)}
+                  onOpenReceivePayment={() => handleOpenReceivePayment(null)}
+                  onOpenNewDelivery={() => setIsNewDriverOpen(true)}
+                  onOpenNewAccount={() => setIsTransferOpen(true)}
+                />
+              )}
+
+              {(activeTab === "sales" || activeTab === "orders" || activeTab === "returns") && (
+                /* Order and Sale are one flow — a single unified list, no split tabs */
+                <SalesHubView
+                  openNewSignal={newRecordSignal}
+                  onConvertSale={(orderId) => {
+                    const sale = convertOrderToSale(orderId);
+                    if (sale) setActiveReceiptSale(sale);
+                  }}
+                  onViewReceipt={handleViewReceipt}
+                  onOpenReturn={handleOpenReturn}
+                  onReceivePayment={(sale) => {
+                    const dummyCust: Customer = {
+                      id: sale.customerId,
+                      name: sale.customerName,
+                      phone: sale.customerPhone || "",
+                      balance: sale.remainingBalance,
+                      creditLimit: 1000,
+                      totalPurchases: sale.grandTotal,
+                      status: "active",
+                    };
+                    handleOpenReceivePayment(dummyCust);
+                  }}
+                  onOpenNewCustomer={() => setIsNewCustomerOpen(true)}
+                  onReceiveCustomerPayment={handleOpenReceivePayment}
+                />
+              )}
+
+              {activeTab === "pos" && <PosView onSaleComplete={handleSaleCompleted} />}
+
+              {activeTab === "products" && (
+                <StockHubView
+                  onOpenNewProduct={() => setIsNewProductOpen(true)}
+                  onQuickSell={handleQuickSellProduct}
+                  onNavigateToBranchSales={() => setActiveTab("branches")}
+                />
+              )}
+
+              {activeTab === "inventory" && <InventoryView />}
+
+              {activeTab === "purchases" && <PurchasesView initialTab="purchases" />}
+
+              {activeTab === "suppliers" && (
+                <StockHubView
+                  onOpenNewProduct={() => setIsNewProductOpen(true)}
+                  onQuickSell={handleQuickSellProduct}
+                />
+              )}
+
+              {activeTab === "cashflow" && (
+                <CashflowHubView
+                  onOpenNewExpense={() => setIsNewExpenseOpen(true)}
+                  onOpenNewIncome={() => setIsNewIncomeOpen(true)}
+                />
+              )}
+              {activeTab === "expenses" && (
+                <CashflowHubView
+                  initialTab="expenses"
+                  onOpenNewExpense={() => setIsNewExpenseOpen(true)}
+                  onOpenNewIncome={() => setIsNewIncomeOpen(true)}
+                />
+              )}
+              {activeTab === "income" && (
+                <CashflowHubView
+                  initialTab="income"
+                  onOpenNewExpense={() => setIsNewExpenseOpen(true)}
+                  onOpenNewIncome={() => setIsNewIncomeOpen(true)}
+                />
+              )}
+
+              {activeTab === "finance" && (
+                <FinanceHubView
+                  onOpenTransfer={() => setIsTransferOpen(true)}
+                  onOpenNewExpense={() => setIsNewExpenseOpen(true)}
+                  onOpenNewIncome={() => setIsNewIncomeOpen(true)}
+                />
+              )}
+              {activeTab === "payments" && (
+                <FinanceHubView
+                  initialTab="payments"
+                  onOpenTransfer={() => setIsTransferOpen(true)}
+                  onOpenNewExpense={() => setIsNewExpenseOpen(true)}
+                  onOpenNewIncome={() => setIsNewIncomeOpen(true)}
+                />
+              )}
+              {activeTab === "accounts" && (
+                <FinanceHubView
+                  initialTab="accounts"
+                  onOpenTransfer={() => setIsTransferOpen(true)}
+                  onOpenNewExpense={() => setIsNewExpenseOpen(true)}
+                  onOpenNewIncome={() => setIsNewIncomeOpen(true)}
+                />
+              )}
+
+              {activeTab === "customers" && (
+                <SalesHubView
+                  initialTab="customers"
+                  onConvertSale={(orderId) => {
+                    const sale = convertOrderToSale(orderId);
+                    if (sale) setActiveReceiptSale(sale);
+                  }}
+                  onViewReceipt={handleViewReceipt}
+                  onOpenReturn={handleOpenReturn}
+                  onReceivePayment={(sale) =>
+                    handleOpenReceivePayment({
+                      id: sale.customerId,
+                      name: sale.customerName,
+                      phone: sale.customerPhone || "",
+                      balance: sale.remainingBalance,
+                      creditLimit: 1000,
+                      totalPurchases: sale.grandTotal,
+                      status: "active",
+                    })
+                  }
+                  onOpenNewCustomer={() => setIsNewCustomerOpen(true)}
+                  onReceiveCustomerPayment={handleOpenReceivePayment}
+                />
+              )}
+
+              {activeTab === "debts" && <DebtsView />}
+
+              {activeTab === "logistics" && <LogisticsHubView />}
+              {activeTab === "cargo" && <LogisticsHubView initialTab="cargo" />}
+              {activeTab === "tracking" && <LogisticsHubView initialTab="tracking" />}
+              {activeTab === "accounting" && <AccountantView />}
+
+              {(activeTab === "drivers" || activeTab === "delivery") && (
+                <LogisticsHubView initialTab="delivery" />
+              )}
+
+              {activeTab === "targets" && <AdminHubView initialTab="targets" />}
+              {activeTab === "pettycash" && (
+                <FinanceHubView
+                  initialTab="petty"
+                  onOpenTransfer={() => setIsTransferOpen(true)}
+                  onOpenNewExpense={() => setIsNewExpenseOpen(true)}
+                  onOpenNewIncome={() => setIsNewIncomeOpen(true)}
+                />
+              )}
+              {activeTab === "branches" && (
+                <div className="p-4 md:p-6">
+                  <h1 className="text-xl font-extrabold mb-4">Branches &amp; Stock</h1>
+                  <BranchSalesPanel />
+                </div>
+              )}
+              {activeTab === "evcrecon" && (
+                <FinanceHubView
+                  initialTab="evc"
+                  onOpenTransfer={() => setIsTransferOpen(true)}
+                  onOpenNewExpense={() => setIsNewExpenseOpen(true)}
+                  onOpenNewIncome={() => setIsNewIncomeOpen(true)}
+                />
+              )}
+
+              {activeTab === "reports" && <ReportsView />}
+
+              {activeTab === "users" && <AdminHubView initialTab="users" />}
+              {activeTab === "settings" && <AdminHubView />}
+            </>
           )}
-          {activeTab === "dashboard" && (
-            <DashboardView
-              onNavigate={setActiveTab}
-              onOpenNewSale={openNewRecord}
-              onOpenNewExpense={() => setIsNewExpenseOpen(true)}
-              onOpenNewIncome={() => setIsNewIncomeOpen(true)}
-              onOpenReceivePayment={() => handleOpenReceivePayment(null)}
-              onOpenNewDelivery={() => setIsNewDriverOpen(true)}
-              onOpenNewAccount={() => setIsTransferOpen(true)}
-            />
-          )}
-
-          {(activeTab === "sales" || activeTab === "orders" || activeTab === "returns") && (
-            /* Order and Sale are one flow — a single unified list, no split tabs */
-            <SalesHubView
-              openNewSignal={newRecordSignal}
-              onConvertSale={(orderId) => {
-                const sale = convertOrderToSale(orderId);
-                if (sale) setActiveReceiptSale(sale);
-              }}
-              onViewReceipt={handleViewReceipt}
-              onOpenReturn={handleOpenReturn}
-              onReceivePayment={(sale) => {
-                const dummyCust: Customer = {
-                  id: sale.customerId,
-                  name: sale.customerName,
-                  phone: sale.customerPhone || "",
-                  balance: sale.remainingBalance,
-                  creditLimit: 1000,
-                  totalPurchases: sale.grandTotal,
-                  status: "active",
-                };
-                handleOpenReceivePayment(dummyCust);
-              }}
-              onOpenNewCustomer={() => setIsNewCustomerOpen(true)}
-              onReceiveCustomerPayment={handleOpenReceivePayment}
-            />
-          )}
-
-          {activeTab === "pos" && <PosView onSaleComplete={handleSaleCompleted} />}
-
-          {activeTab === "products" && (
-            <StockHubView
-              onOpenNewProduct={() => setIsNewProductOpen(true)}
-              onQuickSell={handleQuickSellProduct}
-            />
-          )}
-
-          {activeTab === "inventory" && <InventoryView />}
-
-          {activeTab === "purchases" && <PurchasesView initialTab="purchases" />}
-
-          {activeTab === "suppliers" && <StockHubView onOpenNewProduct={() => setIsNewProductOpen(true)} onQuickSell={handleQuickSellProduct} />}
-
-          {activeTab === "cashflow" && <CashflowHubView onOpenNewExpense={() => setIsNewExpenseOpen(true)} onOpenNewIncome={() => setIsNewIncomeOpen(true)} />}
-          {activeTab === "expenses" && <CashflowHubView initialTab="expenses" onOpenNewExpense={() => setIsNewExpenseOpen(true)} onOpenNewIncome={() => setIsNewIncomeOpen(true)} />}
-          {activeTab === "income" && <CashflowHubView initialTab="income" onOpenNewExpense={() => setIsNewExpenseOpen(true)} onOpenNewIncome={() => setIsNewIncomeOpen(true)} />}
-
-          {activeTab === "finance" && <FinanceHubView onOpenTransfer={() => setIsTransferOpen(true)} onOpenNewExpense={() => setIsNewExpenseOpen(true)} onOpenNewIncome={() => setIsNewIncomeOpen(true)} />}
-          {activeTab === "payments" && <FinanceHubView initialTab="payments" onOpenTransfer={() => setIsTransferOpen(true)} onOpenNewExpense={() => setIsNewExpenseOpen(true)} onOpenNewIncome={() => setIsNewIncomeOpen(true)} />}
-          {activeTab === "accounts" && <FinanceHubView initialTab="accounts" onOpenTransfer={() => setIsTransferOpen(true)} onOpenNewExpense={() => setIsNewExpenseOpen(true)} onOpenNewIncome={() => setIsNewIncomeOpen(true)} />}
-
-          {activeTab === "customers" && <SalesHubView initialTab="customers" onConvertSale={(orderId) => { const sale = convertOrderToSale(orderId); if (sale) setActiveReceiptSale(sale); }} onViewReceipt={handleViewReceipt} onOpenReturn={handleOpenReturn} onReceivePayment={(sale) => handleOpenReceivePayment({ id: sale.customerId, name: sale.customerName, phone: sale.customerPhone || "", balance: sale.remainingBalance, creditLimit: 1000, totalPurchases: sale.grandTotal, status: "active" })} onOpenNewCustomer={() => setIsNewCustomerOpen(true)} onReceiveCustomerPayment={handleOpenReceivePayment} />}
-
-          {activeTab === "debts" && <DebtsView />}
-
-          {activeTab === "logistics" && <LogisticsHubView />}
-          {activeTab === "cargo" && <LogisticsHubView initialTab="cargo" />}
-          {activeTab === "tracking" && <LogisticsHubView initialTab="tracking" />}
-          {activeTab === "accounting" && <AccountantView />}
-
-          {(activeTab === "drivers" || activeTab === "delivery") && <LogisticsHubView initialTab="delivery" />}
-
-          {activeTab === "targets" && <AdminHubView initialTab="targets" />}
-          {activeTab === "pettycash" && <FinanceHubView initialTab="petty" onOpenTransfer={() => setIsTransferOpen(true)} onOpenNewExpense={() => setIsNewExpenseOpen(true)} onOpenNewIncome={() => setIsNewIncomeOpen(true)} />}
-          {activeTab === "branches" && <div className="p-4 md:p-6"><h1 className="text-xl font-extrabold mb-4">Branches &amp; Stock</h1><BranchSalesPanel /></div>}
-          {activeTab === "evcrecon" && <FinanceHubView initialTab="evc" onOpenTransfer={() => setIsTransferOpen(true)} onOpenNewExpense={() => setIsNewExpenseOpen(true)} onOpenNewIncome={() => setIsNewIncomeOpen(true)} />}
-
-          {activeTab === "reports" && <ReportsView />}
-
-          {activeTab === "users" && <AdminHubView initialTab="users" />}
-          {activeTab === "settings" && <AdminHubView />}
-          </>)}
         </main>
-        <AlertCenter onOpen={() => setActiveTab("tracking" as NavSection)} onOpenDebt={() => setActiveTab("debts")} />
+        <AlertCenter
+          onOpen={() => setActiveTab("tracking" as NavSection)}
+          onOpenDebt={() => setActiveTab("debts")}
+        />
       </div>
 
       {/* Global Modals */}

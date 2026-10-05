@@ -39,7 +39,13 @@ function notify(title: string, body: string) {
   }
 }
 
-export function AlertCenter({ onOpen, onOpenDebt }: { onOpen: () => void; onOpenDebt: () => void }) {
+export function AlertCenter({
+  onOpen,
+  onOpenDebt,
+}: {
+  onOpen: () => void;
+  onOpenDebt: () => void;
+}) {
   const items = useTrackItems();
   const debtData = useDebts();
   const { customers, suppliers } = useStore();
@@ -57,10 +63,27 @@ export function AlertCenter({ onOpen, onOpenDebt }: { onOpen: () => void; onOpen
   const today = todayStr();
   const freshDebt = debts.filter((d) => d.track.lastDebtReminder !== today);
   const ledgerDebtAlerts = [
-    ...customers.map((c) => ({ id: `customer:${c.id}`, name: c.name, balance: c.balance, dueDate: debtData.dueDates[`customer:${c.id}`] || "" })),
-    ...suppliers.map((s) => ({ id: `supplier:${s.id}`, name: s.name, balance: s.balance, dueDate: debtData.dueDates[`supplier:${s.id}`] || "" })),
-    ...debtData.records.map((d) => ({ id: d.id, name: d.partyName, balance: debtBalance(d), dueDate: d.dueDate })),
-  ].map((d) => ({ ...d, state: debtReminderState(d.dueDate, d.balance) })).filter((d) => d.state !== "none");
+    ...customers.map((c) => ({
+      id: `customer:${c.id}`,
+      name: c.name,
+      balance: c.balance,
+      dueDate: debtData.dueDates[`customer:${c.id}`] || "",
+    })),
+    ...suppliers.map((s) => ({
+      id: `supplier:${s.id}`,
+      name: s.name,
+      balance: s.balance,
+      dueDate: debtData.dueDates[`supplier:${s.id}`] || "",
+    })),
+    ...debtData.records.map((d) => ({
+      id: d.id,
+      name: d.partyName,
+      balance: debtBalance(d),
+      dueDate: d.dueDate,
+    })),
+  ]
+    .map((d) => ({ ...d, state: debtReminderState(d.dueDate, d.balance) }))
+    .filter((d) => d.state !== "none");
 
   // Sound + notification: every minute while cash is overdue; once per day per debt.
   useEffect(() => {
@@ -75,10 +98,10 @@ export function AlertCenter({ onOpen, onOpenDebt }: { onOpen: () => void; onOpen
           "Lacagta Driver-ka",
           `${cash.length} driver ayaan lacagta soo collect garayn 1 saac kadib.`,
         );
-       if (freshDebt.length || ledgerDebtAlerts.length) {
+      if (freshDebt.length || ledgerDebtAlerts.length) {
         notify(
           "Xasuusin Deyn",
-           `${freshDebt.length + ledgerDebtAlerts.length} deyn ayaa bixinteedu dhow tahay ama dhaaftay.`,
+          `${freshDebt.length + ledgerDebtAlerts.length} deyn ayaa bixinteedu dhow tahay ama dhaaftay.`,
         );
         freshDebt.forEach((d) => updateTrack(d.id, { lastDebtReminder: today }));
       }
@@ -126,12 +149,21 @@ export function AlertCenter({ onOpen, onOpenDebt }: { onOpen: () => void; onOpen
         ))}
         {ledgerDebtAlerts.map((d) => (
           <div key={d.id} className="px-4 py-2">
-            <b className={d.state === "overdue" ? "text-red-700" : "text-amber-700"}>{d.name}</b>
-            {" "}— deyn ${d.balance.toFixed(2)} {d.state === "overdue" ? "waqtigii waa dhaafay" : d.state === "today" ? "maanta ayaa la sugayaa" : "bixintu waa berri"}.
+            <b className={d.state === "overdue" ? "text-red-700" : "text-amber-700"}>{d.name}</b> —
+            deyn ${d.balance.toFixed(2)}{" "}
+            {d.state === "overdue"
+              ? "waqtigii waa dhaafay"
+              : d.state === "today"
+                ? "maanta ayaa la sugayaa"
+                : "bixintu waa berri"}
+            .
           </div>
         ))}
       </div>
-      <button onClick={ledgerDebtAlerts.length ? onOpenDebt : onOpen} className="w-full bg-slate-900 text-lime-400 py-2 text-xs font-bold">
+      <button
+        onClick={ledgerDebtAlerts.length ? onOpenDebt : onOpen}
+        className="w-full bg-slate-900 text-lime-400 py-2 text-xs font-bold"
+      >
         Fur {ledgerDebtAlerts.length ? "Deymaha" : "Tracking"}
       </button>
     </div>

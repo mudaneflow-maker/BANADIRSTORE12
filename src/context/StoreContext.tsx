@@ -180,7 +180,10 @@ interface StoreContextType {
   deleteIncome: (id: string) => void;
   transferFunds: (transfer: Omit<AccountTransfer, "id">) => void;
   addPaymentAccount: (account: Omit<PaymentAccount, "id">) => void;
-  updatePaymentAccount: (id: string, patch: Partial<Omit<PaymentAccount, "id" | "balance">>) => void;
+  updatePaymentAccount: (
+    id: string,
+    patch: Partial<Omit<PaymentAccount, "id" | "balance">>,
+  ) => void;
   deletePaymentAccount: (id: string) => { ok: boolean; error?: string };
   adjustAccountBalance: (id: string, amount: number, detail: string) => boolean;
   addAccount: (account: Omit<PaymentAccount, "id">) => void;
@@ -255,7 +258,7 @@ const StoreContext =
   g.__benadirStoreCtx ?? (g.__benadirStoreCtx = createContext<StoreContextType | null>(null));
 
 const INITIAL_SETTINGS: StoreSettings = {
-  storeName: "Benadir Store",
+  storeName: "Banadir Online",
   storePhone: "+252 61 500 1234",
   storeAddress: "Maka Al Mukarama St, Hodan District, Mogadishu",
   taxRate: 0,
@@ -263,7 +266,7 @@ const INITIAL_SETTINGS: StoreSettings = {
   currencyCode: "USD",
   dailyTarget: 0,
   monthlyTarget: 0,
-  receiptHeader: "BENADIR STORE\nOnline POS & Commercial Engine\nTax ID: BND-884920",
+  receiptHeader: "BANADIR ONLINE\nE-Commerce & Store Operations\nTax ID: BND-884920",
   receiptFooter:
     "Mahadsanid! Thank you for shopping with us.\nGoods once sold in good condition cannot be returned after 48h.",
   financialCycle: "Cycle 1 (Sep 01 - Sep 30, 2026)",
@@ -1428,13 +1431,21 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     const saved = localStorage.getItem("benadir_products");
     let list: Product[] = [];
     if (saved) {
-      try { list = JSON.parse(saved); } catch { list = []; }
+      try {
+        list = JSON.parse(saved);
+      } catch {
+        list = [];
+      }
     } else if (isResetDone) {
       return [];
     }
 
-    const hasMainGift = list.some((p) => p.id === "prod-gift-main" || p.name.includes("Main Store (Hadyad)"));
-    const hasGarooweGift = list.some((p) => p.id === "prod-gift-garoowe" || p.name.includes("Garoowe (Hadyad)"));
+    const hasMainGift = list.some(
+      (p) => p.id === "prod-gift-main" || p.name.includes("Main Store (Hadyad)"),
+    );
+    const hasGarooweGift = list.some(
+      (p) => p.id === "prod-gift-garoowe" || p.name.includes("Garoowe (Hadyad)"),
+    );
     const toAdd: Product[] = [];
 
     if (!hasMainGift) {
@@ -1477,7 +1488,11 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
     if (toAdd.length > 0) {
       list = [...list, ...toAdd];
-      try { localStorage.setItem("benadir_products", JSON.stringify(list)); } catch { /* ignore */ }
+      try {
+        localStorage.setItem("benadir_products", JSON.stringify(list));
+      } catch {
+        /* ignore */
+      }
     }
 
     return list;
@@ -1684,7 +1699,21 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     return saved ? JSON.parse(saved) : INITIAL_SETTINGS;
   });
 
-  const [currentUser, setCurrentUser] = useState<User>(INITIAL_USER);
+  const [currentUser, setCurrentUser] = useState<User>(() => {
+    const savedName =
+      typeof window !== "undefined" ? localStorage.getItem("benadir__owner_name") : null;
+    const savedEmail =
+      typeof window !== "undefined" ? localStorage.getItem("benadir__owner_email") : null;
+    if (savedName || savedEmail) {
+      return {
+        ...INITIAL_USER,
+        name: savedName || "Owner",
+        email: savedEmail || "owner@banadir.so",
+        role: "Owner",
+      };
+    }
+    return INITIAL_USER;
+  });
 
   // Sync to localStorage
   useEffect(() => {
@@ -1929,9 +1958,13 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     if (newSale.amountPaid > 0) {
       setAccounts((prev) => {
         if (!prev.length) return prev;
-        const match = (newSale.depositAccountId && prev.find(a => a.id === newSale.depositAccountId)) || matchAccountForMethod(prev, newSale.paymentMethod);
+        const match =
+          (newSale.depositAccountId && prev.find((a) => a.id === newSale.depositAccountId)) ||
+          matchAccountForMethod(prev, newSale.paymentMethod);
         if (!match) return prev;
-        return prev.map((acc) => acc.id === match.id ? { ...acc, balance: acc.balance + newSale.amountPaid } : acc);
+        return prev.map((acc) =>
+          acc.id === match.id ? { ...acc, balance: acc.balance + newSale.amountPaid } : acc,
+        );
       });
     }
 
@@ -2823,10 +2856,15 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       if (s.units) setUnits(s.units);
 
       try {
-        const extra = JSON.parse(localStorage.getItem("benadir_pre_reset_extra_v1") || "null") as Record<string, string> | null;
-        if (extra) Object.entries(extra).forEach(([key, value]) => localStorage.setItem(key, value));
+        const extra = JSON.parse(
+          localStorage.getItem("benadir_pre_reset_extra_v1") || "null",
+        ) as Record<string, string> | null;
+        if (extra)
+          Object.entries(extra).forEach(([key, value]) => localStorage.setItem(key, value));
         window.dispatchEvent(new CustomEvent("benadir-remote-update"));
-      } catch { /* Older backups may not have independent stores. */ }
+      } catch {
+        /* Older backups may not have independent stores. */
+      }
       localStorage.setItem("benadir_opening_complete_v1", "true");
 
       localStorage.removeItem("benadir_factory_reset_done");
@@ -2851,8 +2889,23 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
     // MANDATORY REQUIREMENT: Backup/restore point MUST exist before reset
     createManualBackup("Pre-Factory Reset Authoritative Snapshot");
-    const independentKeys = ["benadir_branches_v1", "benadir_tracking_v1", "benadir_journal_manual_v1", "benadir_ai_accountant_chat_v1", "benadir_ai_stock_advisor_v1", "benadir_finengine_v1", "benadir_cargo_companies_v1", "benadir_delivery_v1", "benadir_payment_accounts_v1"];
-    localStorage.setItem("benadir_pre_reset_extra_v1", JSON.stringify(Object.fromEntries(independentKeys.map(key => [key, localStorage.getItem(key) || ""]))));
+    const independentKeys = [
+      "benadir_branches_v1",
+      "benadir_tracking_v1",
+      "benadir_journal_manual_v1",
+      "benadir_ai_accountant_chat_v1",
+      "benadir_ai_stock_advisor_v1",
+      "benadir_finengine_v1",
+      "benadir_cargo_companies_v1",
+      "benadir_delivery_v1",
+      "benadir_payment_accounts_v1",
+    ];
+    localStorage.setItem(
+      "benadir_pre_reset_extra_v1",
+      JSON.stringify(
+        Object.fromEntries(independentKeys.map((key) => [key, localStorage.getItem(key) || ""])),
+      ),
+    );
 
     // 1. Wipe all business / sample / test data
     setProducts([]);
@@ -2899,15 +2952,37 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     // Reset the independent offline-first stores as well as the context arrays.
     // Keep the pre-reset backup for recovery and write explicit empty values so they sync.
     localStorage.setItem("benadir_accounts", "[]");
-    localStorage.setItem("benadir_branches_v1", JSON.stringify({ branches: [], stock: {}, sales: [], transfers: [] }));
+    localStorage.setItem(
+      "benadir_branches_v1",
+      JSON.stringify({ branches: [], stock: {}, sales: [], transfers: [] }),
+    );
     localStorage.setItem("benadir_tracking_v1", "{}");
     localStorage.setItem("benadir_journal_manual_v1", "[]");
     localStorage.setItem("benadir_ai_accountant_chat_v1", "[]");
     localStorage.setItem("benadir_ai_stock_advisor_v1", "[]");
     localStorage.setItem("benadir_cargo_companies_v1", "[]");
-    localStorage.setItem("benadir_delivery_v1", JSON.stringify({ companies: [], locations: [], drivers: [] }));
-    localStorage.setItem("benadir_payment_accounts_v1", JSON.stringify({ wallet: [], merchant: [], bank: [] }));
-    localStorage.setItem("benadir_finengine_v1", JSON.stringify({ config: { systemStartDate: "2026-10-01", monthlyBaseTarget: 93.5, rentAmount: 250, rentStartDate: "2027-02-01" }, fundTransfers: [], reconciliations: [], audit: [] }));
+    localStorage.setItem(
+      "benadir_delivery_v1",
+      JSON.stringify({ companies: [], locations: [], drivers: [] }),
+    );
+    localStorage.setItem(
+      "benadir_payment_accounts_v1",
+      JSON.stringify({ wallet: [], merchant: [], bank: [] }),
+    );
+    localStorage.setItem(
+      "benadir_finengine_v1",
+      JSON.stringify({
+        config: {
+          systemStartDate: "2026-10-01",
+          monthlyBaseTarget: 93.5,
+          rentAmount: 250,
+          rentStartDate: "2027-02-01",
+        },
+        fundTransfers: [],
+        reconciliations: [],
+        audit: [],
+      }),
+    );
     localStorage.setItem("benadir_categories", "[]");
     localStorage.setItem("benadir_brands", "[]");
     localStorage.setItem("benadir_units", "[]");
@@ -2970,9 +3045,11 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
     // Deduct refund from the cash account (match by type — IDs change after opening-balance setup)
     setAccounts((prev) => {
-      const cash = prev.find(a => a.type === "Cash") || prev.find(a => a.isDefault) || prev[0];
+      const cash = prev.find((a) => a.type === "Cash") || prev.find((a) => a.isDefault) || prev[0];
       if (!cash) return prev;
-      return prev.map((acc) => acc.id === cash.id ? { ...acc, balance: acc.balance - newReturn.totalRefund } : acc);
+      return prev.map((acc) =>
+        acc.id === cash.id ? { ...acc, balance: acc.balance - newReturn.totalRefund } : acc,
+      );
     });
 
     setReturns((prev) => [newReturn, ...prev]);
@@ -3666,7 +3743,10 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   };
 
   // Balance is never edited directly here — money moves only through transfers/transactions.
-  const updatePaymentAccount = (id: string, patch: Partial<Omit<PaymentAccount, "id" | "balance">>) => {
+  const updatePaymentAccount = (
+    id: string,
+    patch: Partial<Omit<PaymentAccount, "id" | "balance">>,
+  ) => {
     setAccounts((prev) => prev.map((a) => (a.id === id ? { ...a, ...patch } : a)));
     addAuditLog("ACCOUNT_UPDATED", "ACCOUNTS", `${patch.name ?? id}`);
   };
@@ -3675,7 +3755,11 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const deletePaymentAccount = (id: string): { ok: boolean; error?: string } => {
     const acc = accounts.find((a) => a.id === id);
     if (!acc) return { ok: false, error: "Account lama helin." };
-    if (Math.abs(acc.balance) > 0.004) return { ok: false, error: `${acc.name} wuxuu leeyahay $${acc.balance.toFixed(2)}. Marka hore lacagta u wareeji account kale.` };
+    if (Math.abs(acc.balance) > 0.004)
+      return {
+        ok: false,
+        error: `${acc.name} wuxuu leeyahay $${acc.balance.toFixed(2)}. Marka hore lacagta u wareeji account kale.`,
+      };
     setAccounts((prev) => prev.filter((a) => a.id !== id));
     addAuditLog("ACCOUNT_DELETED", "ACCOUNTS", acc.name);
     return { ok: true };
@@ -3683,17 +3767,34 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
   const adjustAccountBalance = (id: string, amount: number, detail: string): boolean => {
     const account = accounts.find((a) => a.id === id);
-    if (!account || !Number.isFinite(amount) || amount === 0 || account.balance + amount < -0.004) return false;
-    setAccounts((prev) => prev.map((a) => a.id === id ? { ...a, balance: a.balance + amount } : a));
-    addAuditLog("DEBT_ACCOUNT_MOVEMENT", account.name, `${detail} · ${amount > 0 ? "+" : ""}$${amount.toFixed(2)}`);
+    if (!account || !Number.isFinite(amount) || amount === 0 || account.balance + amount < -0.004)
+      return false;
+    setAccounts((prev) =>
+      prev.map((a) => (a.id === id ? { ...a, balance: a.balance + amount } : a)),
+    );
+    addAuditLog(
+      "DEBT_ACCOUNT_MOVEMENT",
+      account.name,
+      `${detail} · ${amount > 0 ? "+" : ""}$${amount.toFixed(2)}`,
+    );
     return true;
   };
 
   const initializeOpeningAccounts = (opening: Omit<PaymentAccount, "id">[]) => {
-    if (authenticatedRole !== "owner" || localStorage.getItem("benadir_opening_complete_v1") === "true" || !opening.length || opening.some(a => !Number.isFinite(a.balance) || a.balance < 0)) return;
+    if (
+      authenticatedRole !== "owner" ||
+      localStorage.getItem("benadir_opening_complete_v1") === "true" ||
+      !opening.length ||
+      opening.some((a) => !Number.isFinite(a.balance) || a.balance < 0)
+    )
+      return;
     setAccounts(opening.map((a, i) => ({ ...a, id: `acc-opening-${Date.now()}-${i}` })));
     localStorage.setItem("benadir_opening_complete_v1", "true");
-    addAuditLog("OPENING_BALANCES", "ACCOUNTS", `Recorded ${opening.length} opening account balances`);
+    addAuditLog(
+      "OPENING_BALANCES",
+      "ACCOUNTS",
+      `Recorded ${opening.length} opening account balances`,
+    );
   };
 
   const deleteExpense = (id: string) => {
@@ -3701,9 +3802,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     if (exp) {
       setAccounts((prev) =>
         prev.map((acc) =>
-          acc.id === exp.paidFromAccountId
-            ? { ...acc, balance: acc.balance + exp.amount }
-            : acc,
+          acc.id === exp.paidFromAccountId ? { ...acc, balance: acc.balance + exp.amount } : acc,
         ),
       );
     }
@@ -3964,97 +4063,95 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     const dateOnly = newPurchase.receivedDate || now.split("T")[0];
     const purchaseNo = newPurchase.purchaseNo;
 
-      setProducts((prev) =>
-        prev.map((prod) => {
-          const item = newPurchase.items.find((it) => it.productId === prod.id);
-          if (!item) return prod;
+    setProducts((prev) =>
+      prev.map((prod) => {
+        const item = newPurchase.items.find((it) => it.productId === prod.id);
+        if (!item) return prod;
 
-          const oldStock = prod.stock;
-          const newStock = oldStock + item.quantity;
-          const oldCost = prod.costPrice;
-          const newCost = item.landedUnitCost ?? item.costPrice;
-          const newSelling =
-            item.sellingPrice && item.sellingPrice > 0 ? item.sellingPrice : prod.sellingPrice;
+        const oldStock = prod.stock;
+        const newStock = oldStock + item.quantity;
+        const oldCost = prod.costPrice;
+        const newCost = item.landedUnitCost ?? item.costPrice;
+        const newSelling =
+          item.sellingPrice && item.sellingPrice > 0 ? item.sellingPrice : prod.sellingPrice;
 
-          // Weighted average cost formula: ((oldStock * oldCost) + (itemQty * itemCost)) / newStock
-          const totalVal = oldStock * oldCost + item.quantity * newCost;
-          const weightedCost =
-            newStock > 0 ? parseFloat((totalVal / newStock).toFixed(2)) : newCost;
+        // Weighted average cost formula: ((oldStock * oldCost) + (itemQty * itemCost)) / newStock
+        const totalVal = oldStock * oldCost + item.quantity * newCost;
+        const weightedCost = newStock > 0 ? parseFloat((totalVal / newStock).toFixed(2)) : newCost;
 
-          const newLayer: CostLayer = {
-            id: `layer-${Date.now()}-${item.productId}`,
-            date: dateOnly,
-            quantity: item.quantity,
-            remainingQuantity: item.quantity,
-            costPrice: newCost,
-            sellingPrice: newSelling,
-            source: "purchase",
-            referenceNo: purchaseNo,
-            notes: `PO #${purchaseNo} - Supplier: ${newPurchase.supplierName}`,
-          };
-
-          const costLayers = [newLayer, ...(prod.costLayers || [])];
-
-          const priceHistory = [...(prod.priceHistory || [])];
-          if (newCost !== oldCost || newSelling !== prod.sellingPrice) {
-            priceHistory.unshift({
-              id: `ph-${Date.now()}-${item.productId}`,
-              date: dateOnly,
-              oldCost,
-              newCost,
-              oldSelling: prod.sellingPrice,
-              newSelling,
-              actor: currentUser.name || "Admin",
-              reason: `Purchase PO #${purchaseNo}`,
-            });
-          }
-
-          const history = [...(prod.history || [])];
-          history.unshift({
-            id: `he-${Date.now()}-${item.productId}`,
-            timestamp: new Date().toLocaleString([], { dateStyle: "short", timeStyle: "short" }),
-            actor: currentUser.name || "Admin",
-            action: "PURCHASE_RECEIPT",
-            oldValue: `${oldStock} ${prod.unit} @ $${oldCost.toFixed(2)}`,
-            newValue: `${newStock} ${prod.unit} (Weighted Avg $${weightedCost.toFixed(2)})`,
-            details: `Received +${item.quantity} ${prod.unit} at $${newCost.toFixed(2)} cost from ${newPurchase.supplierName}. PO: ${purchaseNo}`,
-          });
-
-          return {
-            ...prod,
-            stock: newStock,
-            costPrice: weightedCost,
-            sellingPrice: newSelling,
-            costLayers,
-            priceHistory,
-            history,
-            updatedAt: now,
-          };
-        }),
-      );
-
-      // 3. Record canonical inventory movements
-      const purchaseMovements: InventoryMovement[] = newPurchase.items.map((item) => {
-        const prod = products.find((p) => p.id === item.productId);
-        const stockAfter = (prod ? prod.stock : 0) + item.quantity;
-        return {
-          id: `mov-${Date.now()}-${item.productId}`,
+        const newLayer: CostLayer = {
+          id: `layer-${Date.now()}-${item.productId}`,
           date: dateOnly,
-          productId: item.productId,
-          productName: item.productName,
-          type: "purchase",
-          quantityChange: item.quantity,
-          stockAfter,
-          costPrice: item.landedUnitCost ?? item.costPrice,
-          sellingPrice: item.sellingPrice || prod?.sellingPrice || 0,
-          unit: item.unit || prod?.unit || "PCS",
+          quantity: item.quantity,
+          remainingQuantity: item.quantity,
+          costPrice: newCost,
+          sellingPrice: newSelling,
+          source: "purchase",
           referenceNo: purchaseNo,
-          reason: `Purchase Inflow PO #${purchaseNo} (${newPurchase.supplierName})`,
-          actor: currentUser.name || "Admin",
+          notes: `PO #${purchaseNo} - Supplier: ${newPurchase.supplierName}`,
         };
-      });
-      setInventoryMovements((prev) => [...purchaseMovements, ...prev]);
-    
+
+        const costLayers = [newLayer, ...(prod.costLayers || [])];
+
+        const priceHistory = [...(prod.priceHistory || [])];
+        if (newCost !== oldCost || newSelling !== prod.sellingPrice) {
+          priceHistory.unshift({
+            id: `ph-${Date.now()}-${item.productId}`,
+            date: dateOnly,
+            oldCost,
+            newCost,
+            oldSelling: prod.sellingPrice,
+            newSelling,
+            actor: currentUser.name || "Admin",
+            reason: `Purchase PO #${purchaseNo}`,
+          });
+        }
+
+        const history = [...(prod.history || [])];
+        history.unshift({
+          id: `he-${Date.now()}-${item.productId}`,
+          timestamp: new Date().toLocaleString([], { dateStyle: "short", timeStyle: "short" }),
+          actor: currentUser.name || "Admin",
+          action: "PURCHASE_RECEIPT",
+          oldValue: `${oldStock} ${prod.unit} @ $${oldCost.toFixed(2)}`,
+          newValue: `${newStock} ${prod.unit} (Weighted Avg $${weightedCost.toFixed(2)})`,
+          details: `Received +${item.quantity} ${prod.unit} at $${newCost.toFixed(2)} cost from ${newPurchase.supplierName}. PO: ${purchaseNo}`,
+        });
+
+        return {
+          ...prod,
+          stock: newStock,
+          costPrice: weightedCost,
+          sellingPrice: newSelling,
+          costLayers,
+          priceHistory,
+          history,
+          updatedAt: now,
+        };
+      }),
+    );
+
+    // 3. Record canonical inventory movements
+    const purchaseMovements: InventoryMovement[] = newPurchase.items.map((item) => {
+      const prod = products.find((p) => p.id === item.productId);
+      const stockAfter = (prod ? prod.stock : 0) + item.quantity;
+      return {
+        id: `mov-${Date.now()}-${item.productId}`,
+        date: dateOnly,
+        productId: item.productId,
+        productName: item.productName,
+        type: "purchase",
+        quantityChange: item.quantity,
+        stockAfter,
+        costPrice: item.landedUnitCost ?? item.costPrice,
+        sellingPrice: item.sellingPrice || prod?.sellingPrice || 0,
+        unit: item.unit || prod?.unit || "PCS",
+        referenceNo: purchaseNo,
+        reason: `Purchase Inflow PO #${purchaseNo} (${newPurchase.supplierName})`,
+        actor: currentUser.name || "Admin",
+      };
+    });
+    setInventoryMovements((prev) => [...purchaseMovements, ...prev]);
   };
 
   const setPurchaseStage = (purchaseId: string, stage: PurchaseStage, note?: string) => {
@@ -4179,24 +4276,35 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       ];
       if (purchaseType === "INTERNATIONAL") {
         const ce = newPurchase.cargo?.expenses;
-        lines.push(["Cargo Xamaali", ce?.xamaali], ["Cargo Transportation", ce?.transportation], [ce?.otherNote || "Cargo Other", ce?.other]);
+        lines.push(
+          ["Cargo Xamaali", ce?.xamaali],
+          ["Cargo Transportation", ce?.transportation],
+          [ce?.otherNote || "Cargo Other", ce?.other],
+        );
       }
       const exps: Expense[] = lines
         .filter(([, a]) => (a || 0) > 0)
-        .map(([label, a], i) => ({
-          id: `exp-${Date.now()}-${i}-${Math.random().toString(36).slice(2, 5)}`,
-          title: `${label} — ${purchaseNo}`,
-          category: "Purchase Expense",
-          amount: a || 0,
-          date: dateOnly,
-          paidFromAccountId: newPurchase.accountId!,
-          paidFromAccountName: acc?.name || newPurchase.accountName || "",
-          notes: `Purchase ${purchaseNo} (${purchaseType}) operational expense`,
-        }) as Expense);
+        .map(
+          ([label, a], i) =>
+            ({
+              id: `exp-${Date.now()}-${i}-${Math.random().toString(36).slice(2, 5)}`,
+              title: `${label} — ${purchaseNo}`,
+              category: "Purchase Expense",
+              amount: a || 0,
+              date: dateOnly,
+              paidFromAccountId: newPurchase.accountId!,
+              paidFromAccountName: acc?.name || newPurchase.accountName || "",
+              notes: `Purchase ${purchaseNo} (${purchaseType}) operational expense`,
+            }) as Expense,
+        );
       if (exps.length) {
         const total = exps.reduce((s, e) => s + e.amount, 0);
         setExpenses((prev) => [...exps, ...prev]);
-        setAccounts((prev) => prev.map((a) => (a.id === newPurchase.accountId ? { ...a, balance: a.balance - total } : a)));
+        setAccounts((prev) =>
+          prev.map((a) =>
+            a.id === newPurchase.accountId ? { ...a, balance: a.balance - total } : a,
+          ),
+        );
       }
     }
 
@@ -4520,7 +4628,10 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     const totalStockValueCost = products.reduce((sum, p) => sum + p.costPrice * p.stock, 0);
     // Goods value includes stock held at branches (e.g. Garoowe), gifted items included.
     const brQty = branchQtyByProduct();
-    const totalStockValueSelling = products.reduce((sum, p) => sum + p.sellingPrice * (p.stock + (brQty[p.id] || 0)), 0);
+    const totalStockValueSelling = products.reduce(
+      (sum, p) => sum + p.sellingPrice * (p.stock + (brQty[p.id] || 0)),
+      0,
+    );
 
     return {
       totalSales,

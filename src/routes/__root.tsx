@@ -75,20 +75,20 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Benadir Store" },
+      { title: "Banadir Online - Enterprise E-Commerce & Store Operations" },
       {
         name: "description",
         content:
-          "Benadir Store - Enterprise POS, Inventory, Sales, Financial Engine, and Customer Order Portal",
+          "Banadir Online - Enterprise POS, Inventory, Sales, Financial Engine, and Customer Order Portal",
       },
-      { name: "theme-color", content: "#0f172a" },
+      { name: "theme-color", content: "#0B2559" },
       { name: "apple-mobile-web-app-capable", content: "yes" },
-      { name: "apple-mobile-web-app-title", content: "Benadir Store" },
-      { property: "og:title", content: "Benadir Store" },
+      { name: "apple-mobile-web-app-title", content: "Banadir Online" },
+      { property: "og:title", content: "Banadir Online" },
       {
         property: "og:description",
         content:
-          "Benadir Store - Enterprise POS, Inventory, Sales, Financial Engine, and Customer Order Portal",
+          "Banadir Online - Enterprise POS, Inventory, Sales, Financial Engine, and Customer Order Portal",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
@@ -108,7 +108,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         rel: "stylesheet",
         href: "https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Sora:wght@400;500;600;700&display=swap",
       },
-      { rel: "icon", href: "/favicon.ico", type: "image/x-icon" },
+      { rel: "icon", href: "/favicon.svg", type: "image/svg+xml" },
       { rel: "manifest", href: "/manifest.webmanifest" },
       { rel: "apple-touch-icon", href: "/apple-touch-icon.png" },
     ],
@@ -145,7 +145,9 @@ function RootComponent() {
       void navigator.serviceWorker
         .getRegistrations()
         .then((regs) => Promise.all(regs.map((r) => r.unregister())))
-        .then(() => (typeof caches !== "undefined" ? caches.keys() : Promise.resolve([] as string[])))
+        .then(() =>
+          typeof caches !== "undefined" ? caches.keys() : Promise.resolve([] as string[]),
+        )
         .then((keys) => Promise.all(keys.map((key) => caches.delete(key))))
         .catch(() => undefined);
       return;

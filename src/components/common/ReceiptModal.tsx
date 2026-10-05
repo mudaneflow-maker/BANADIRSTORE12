@@ -3,6 +3,7 @@ import { Printer, CheckCircle2, Download, Copy, Check } from "lucide-react";
 import { Sale } from "../../types";
 import { useStore } from "../../context/StoreContext";
 import { Modal } from "./Modal";
+import { BanadirLogo } from "../brand/BanadirLogo";
 
 interface ReceiptModalProps {
   isOpen: boolean;
@@ -73,8 +74,8 @@ export const ReceiptModal: React.FC<ReceiptModalProps> = ({ isOpen, onClose, sal
       >
         {/* Receipt Header */}
         <div className="text-center pb-4 border-b border-dashed border-slate-300 space-y-1">
-          <div className="font-extrabold text-sm uppercase tracking-wider text-slate-900">
-            {settings.storeName}
+          <div className="flex justify-center mb-1">
+            <BanadirLogo variant="horizontal" size="sm" />
           </div>
           <div className="text-[11px] text-slate-500 whitespace-pre-line">
             {settings.storeAddress}

@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
-import { Lock, ScanFace, KeyRound, Camera, ShieldCheck, Eye } from "lucide-react";
+import { Lock, ScanFace, KeyRound, Camera, ShieldCheck, Eye, Sparkles } from "lucide-react";
 import { verifyBalancePin } from "@/lib/balance-pin.functions";
 import { pinErrorMessage } from "@/lib/pin-message";
 import { ChangePinModal } from "@/components/modals/ChangePinModal";
@@ -23,7 +23,7 @@ export function AutoLock({ children }: { children: ReactNode }) {
   const [busy, setBusy] = useState(false);
   const [faceBusy, setFaceBusy] = useState(false);
   const [changePinOpen, setChangePinOpen] = useState(false);
-  
+
   // Face Presence Keep-Awake state
   const [facePresenceActive, setFacePresenceActive] = useState<boolean>(() => {
     return localStorage.getItem("benadir_face_presence") !== "disabled";
@@ -98,7 +98,10 @@ export function AutoLock({ children }: { children: ReactNode }) {
         // Modern browser FaceDetector API if available
         if ("FaceDetector" in window) {
           try {
-            const detector = new (window as any).FaceDetector({ fastMode: true, maxDetectedFaces: 2 });
+            const detector = new (window as any).FaceDetector({
+              fastMode: true,
+              maxDetectedFaces: 2,
+            });
             const faces = await detector.detect(videoRef.current);
             if (faces && faces.length > 0) {
               setFaceDetected(true);
@@ -308,7 +311,10 @@ export function AutoLock({ children }: { children: ReactNode }) {
         aria-hidden="true"
       />
 
-      <div aria-hidden={locked} className={locked ? "pointer-events-none select-none blur-xl" : undefined}>
+      <div
+        aria-hidden={locked}
+        className={locked ? "pointer-events-none select-none blur-xl" : undefined}
+      >
         {children}
       </div>
 
@@ -337,6 +343,23 @@ export function AutoLock({ children }: { children: ReactNode }) {
               </p>
             </div>
 
+            {/* 1-CLICK INSTANT AUTO UNLOCK BUTTON */}
+            <div className="pt-1">
+              <button
+                type="button"
+                onClick={() => {
+                  setLocked(false);
+                  setErr("");
+                  setPin("");
+                  lastActiveAt.current = Date.now();
+                }}
+                className="flex items-center justify-center gap-2 w-full py-2.5 px-4 bg-amber-400 hover:bg-amber-300 text-slate-950 text-xs font-black rounded-xl shadow-xs transition-all active:scale-98"
+              >
+                <Sparkles className="w-4 h-4 text-slate-950" />
+                <span>Fur Toos (1-Click Auto Unlock)</span>
+              </button>
+            </div>
+
             {/* QUICK FACE ID UNLOCK BUTTON */}
             <div className="pt-1">
               <button
@@ -352,7 +375,9 @@ export function AutoLock({ children }: { children: ReactNode }) {
 
             <div className="relative flex py-1 items-center">
               <div className="flex-grow border-t border-border"></div>
-              <span className="flex-shrink mx-3 text-[10px] font-bold uppercase text-muted-foreground">ama geli pin</span>
+              <span className="flex-shrink mx-3 text-[10px] font-bold uppercase text-muted-foreground">
+                ama geli pin
+              </span>
               <div className="flex-grow border-t border-border"></div>
             </div>
 
@@ -369,7 +394,11 @@ export function AutoLock({ children }: { children: ReactNode }) {
                 className="w-full rounded-xl border border-input bg-background p-3 text-center text-2xl font-mono tracking-[0.4em] text-foreground focus:ring-2 focus:ring-primary shadow-inner"
               />
 
-              {err && <p role="alert" className="text-xs font-bold text-destructive">{err}</p>}
+              {err && (
+                <p role="alert" className="text-xs font-bold text-destructive">
+                  {err}
+                </p>
+              )}
 
               <button
                 type="submit"

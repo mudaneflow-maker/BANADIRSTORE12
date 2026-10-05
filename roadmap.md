@@ -37,6 +37,7 @@
 - [x] Allow registering gifted stock (main + branch) with no cost price
 
 ## New tasks (14:23 UTC)
+
 - [ ] PaymentAccountsPicker: show all saved accounts (wallets/merchants/banks) with per-account icons; default EVC Plus
 - [ ] Orders & Sales: edit/delete/update after creation (e.g. change 1 product to 3)
 - [ ] Icons across the system where appropriate; icons replaceable via upload

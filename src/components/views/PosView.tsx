@@ -24,6 +24,7 @@ export const PosView: React.FC<PosViewProps> = ({ onSaleComplete }) => {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("All");
   const [cart, setCart] = useState<{ product: Product; quantity: number }[]>([]);
+  const [stockWarning, setStockWarning] = useState<string | null>(null);
 
   // Right-side form controls
   const [customerId, setCustomerId] = useState("cust-walk-in");
@@ -51,10 +52,25 @@ export const PosView: React.FC<PosViewProps> = ({ onSaleComplete }) => {
     });
   }, [products, selectedCategory, searchQuery]);
 
+  // DIRECT SALE RESTRICTION: Only main store stock can be sold!
   const addToCart = (product: Product) => {
+    if (product.stock <= 0) {
+      setStockWarning(
+        `Badeecada "${product.name}" kuma jirto Bakhaarka Dhexe (Main Stock: 0). Waxay taallaa laanta Garoowe ama gobolada kale — iibka tooska ah kama geli karto! Ka iibi qaybta Branch Sales.`,
+      );
+      setTimeout(() => setStockWarning(null), 5000);
+      return;
+    }
     setCart((prev) => {
       const existing = prev.find((item) => item.product.id === product.id);
       if (existing) {
+        if (existing.quantity >= product.stock) {
+          setStockWarning(
+            `Kuma filna: Bakhaarka dhexe waxaa yaal kaliya ${product.stock} ${product.unit}.`,
+          );
+          setTimeout(() => setStockWarning(null), 4000);
+          return prev;
+        }
         return prev.map((item) =>
           item.product.id === product.id ? { ...item, quantity: item.quantity + 1 } : item,
         );
@@ -189,24 +205,43 @@ export const PosView: React.FC<PosViewProps> = ({ onSaleComplete }) => {
             ))}
           </div>
 
+          {/* Stock Warning Banner */}
+          {stockWarning && (
+            <div className="p-3 bg-amber-50 border border-amber-200 rounded-xl text-amber-900 text-xs font-medium flex items-center gap-2 animate-in fade-in duration-150">
+              <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0" />
+              <span>{stockWarning}</span>
+            </div>
+          )}
+
           {/* Product Cards Grid */}
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 max-h-[500px] overflow-y-auto pr-1">
             {filteredProducts.map((p) => {
               const inCart = cart.find((i) => i.product.id === p.id);
+              const isMainAvailable = p.stock > 0;
               return (
                 <div
                   key={p.id}
                   onClick={() => addToCart(p)}
-                  className={`p-3 rounded-xl border cursor-pointer transition-all flex flex-col justify-between ${
-                    inCart
-                      ? "border-emerald-500 bg-emerald-50/20 shadow-xs"
-                      : "border-slate-200 bg-white hover:border-slate-300 hover:shadow-xs"
+                  className={`p-3 rounded-xl border transition-all flex flex-col justify-between ${
+                    !isMainAvailable
+                      ? "opacity-60 bg-slate-50 border-dashed border-slate-200 cursor-not-allowed"
+                      : inCart
+                        ? "border-emerald-500 bg-emerald-50/20 shadow-xs cursor-pointer"
+                        : "border-slate-200 bg-white hover:border-[#0B2559] hover:shadow-xs cursor-pointer"
                   }`}
                 >
                   <div>
-                    <div className="flex justify-between text-[10px] text-slate-400 mb-1">
+                    <div className="flex justify-between items-center text-[10px] text-slate-400 mb-1">
                       <span className="font-mono">{p.sku}</span>
-                      <span className="font-semibold text-slate-600">Qty: {p.stock}</span>
+                      <span
+                        className={`font-bold px-1.5 py-0.5 rounded text-[10px] ${
+                          isMainAvailable
+                            ? "bg-emerald-50 text-emerald-800"
+                            : "bg-amber-100 text-amber-900"
+                        }`}
+                      >
+                        {isMainAvailable ? `Main: ${p.stock}` : "0 Main (Laamaha)"}
+                      </span>
                     </div>
                     <div className="text-xs font-bold text-slate-900 line-clamp-2">{p.name}</div>
                   </div>
@@ -220,7 +255,9 @@ export const PosView: React.FC<PosViewProps> = ({ onSaleComplete }) => {
                         {inCart.quantity}
                       </span>
                     ) : (
-                      <span className="p-1 rounded bg-slate-100 text-slate-700 hover:bg-slate-200">
+                      <span
+                        className={`p-1 rounded ${isMainAvailable ? "bg-slate-100 text-slate-700 hover:bg-slate-200" : "bg-slate-100 text-slate-400"}`}
+                      >
                         <Plus className="w-3.5 h-3.5" />
                       </span>
                     )}

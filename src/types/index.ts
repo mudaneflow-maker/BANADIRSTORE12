@@ -87,6 +87,9 @@ export interface Product {
   description?: string;
   specifications?: string;
   notes?: string;
+  isGift?: boolean;
+  locationType?: "main" | "branch" | "gift";
+  branchId?: string;
   costLayers?: CostLayer[];
   priceHistory?: PriceHistoryRecord[];
   history?: ProductHistoryEvent[];
@@ -381,9 +384,18 @@ export interface PurchaseItem {
 
 export type PurchaseType = "LOCAL" | "INTERNATIONAL";
 /** COSTS: directly part of acquiring the product (capitalized into inventory). */
-export interface PurchaseDirectCosts { alibabaFee?: number; chinaFreight?: number; mastercardFee?: number; }
+export interface PurchaseDirectCosts {
+  alibabaFee?: number;
+  chinaFreight?: number;
+  mastercardFee?: number;
+}
 /** EXPENSES: operational handling (never added to unit cost). */
-export interface PurchaseOpExpenses { xamaali?: number; transportation?: number; other?: number; otherNote?: string; }
+export interface PurchaseOpExpenses {
+  xamaali?: number;
+  transportation?: number;
+  other?: number;
+  otherNote?: string;
+}
 export interface PurchaseCargo {
   cargoCost?: number;
   agentName?: string;
@@ -397,7 +409,7 @@ export interface PurchaseCargo {
   expenses?: PurchaseOpExpenses;
 }
 export type PurchaseStage =
-  | "Draft" | "Ordered" | "Paid" | "Shipped" | "In Transit" | "Arrived" | "Received" | "Cancelled";
+  "Draft" | "Ordered" | "Paid" | "Shipped" | "In Transit" | "Arrived" | "Received" | "Cancelled";
 
 export type PurchasePaymentStatus = "full_paid" | "partial_payment" | "credit";
 

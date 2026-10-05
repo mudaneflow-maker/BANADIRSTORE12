@@ -18,6 +18,7 @@ import {
 import { useStore } from "../../context/StoreContext";
 import { NavSection } from "./Sidebar";
 import { PortalLauncher } from "./PortalLauncher";
+import { BanadirLogo } from "@/components/brand/BanadirLogo";
 
 interface HeaderProps {
   onToggleSidebar?: () => void;
@@ -52,10 +53,17 @@ export const Header: React.FC<HeaderProps> = ({
   const quickAddRef = useRef<HTMLDivElement>(null);
   const notifRef = useRef<HTMLDivElement>(null);
 
-  const { todayNetProfit, todayTarget } = getTodayStats();
+  const { todayNetProfit, todayTarget, targetProgressPct } = getTodayStats();
   const targetDifference = todayNetProfit - todayTarget;
-  const targetStatus = targetDifference > 0 ? "DHEERI" : targetDifference < 0 ? "DHIMAN" : "LA GAARAY";
+  const targetStatus =
+    targetDifference > 0 ? "DHEERI" : targetDifference < 0 ? "DHIMAN" : "LA GAARAY";
   const targetAmount = `${targetDifference > 0 ? "+" : targetDifference < 0 ? "-" : ""}$${Math.abs(targetDifference).toFixed(2)}`;
+
+  // Dynamically calculate accurate calendar days remaining in current month forever
+  const now = new Date();
+  const totalDaysInCurMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+  const curDayNumber = now.getDate();
+  const remainingDaysInMonth = Math.max(0, totalDaysInCurMonth - curDayNumber);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -71,9 +79,9 @@ export const Header: React.FC<HeaderProps> = ({
   }, []);
 
   return (
-    <header className="h-16 bg-white border-b border-slate-200/80 px-4 md:px-6 flex items-center justify-between sticky top-0 z-30 shadow-xs">
-      {/* Left side: Hamburger + Global Search */}
-      <div className="flex min-w-0 items-center gap-2 sm:gap-3 flex-1 max-w-xl">
+    <header className="h-16 bg-white border-b border-slate-200/80 px-3 md:px-5 flex items-center justify-between gap-2.5 sm:gap-4 sticky top-0 z-30 shadow-xs">
+      {/* Left side: Hamburger + Mobile Logo + Global Search + SyncBadge */}
+      <div className="flex items-center gap-2 sm:gap-2.5 shrink-0">
         <button
           id="btn-toggle-sidebar"
           onClick={onToggleSidebar}
@@ -85,7 +93,11 @@ export const Header: React.FC<HeaderProps> = ({
           <span className="hidden sm:inline text-xs font-bold text-slate-700">Menu</span>
         </button>
 
-        <div className="relative hidden w-full max-w-[210px] sm:block lg:max-w-[260px]">
+        <div className="lg:hidden flex items-center shrink-0">
+          <BanadirLogo variant="horizontal" size="sm" showSubtitle={false} />
+        </div>
+
+        <div className="relative hidden w-44 sm:block lg:w-56 xl:w-64">
           <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
             <Search className="w-4 h-4" />
           </div>
@@ -94,8 +106,8 @@ export const Header: React.FC<HeaderProps> = ({
             id="global-search-input"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search anything... (Sales, Products, Customers)"
-            className="w-full pl-9 pr-14 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm placeholder-slate-400 focus:outline-hidden focus:ring-2 focus:ring-slate-900 focus:border-slate-900 transition-all shadow-xs"
+            placeholder="Search anything... (Sales, Products)"
+            className="w-full pl-9 pr-12 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm placeholder-slate-400 focus:outline-hidden focus:ring-2 focus:ring-[#0B2559] focus:border-[#0B2559] transition-all shadow-xs"
           />
           <div className="absolute inset-y-0 right-0 pr-2.5 flex items-center pointer-events-none">
             <kbd className="hidden sm:inline-flex items-center px-1.5 py-0.5 text-[10px] font-mono text-slate-400 bg-white border border-slate-200 rounded shadow-xs">
@@ -103,41 +115,76 @@ export const Header: React.FC<HeaderProps> = ({
             </kbd>
           </div>
         </div>
-        <div className="shrink-0"><SyncBadge /></div>
+        <div className="shrink-0">
+          <SyncBadge />
+        </div>
       </div>
 
-      {/* Right side: Today Target, Quick Add, Notifications, Profile */}
-      <div className="flex min-w-0 flex-1 items-center justify-end gap-1.5 sm:gap-3">
-        {/* Today's target KPI card on mobile */}
-        <button
-          onClick={() => onNavigate("targets")}
-          className="flex md:hidden h-8 shrink-0 items-center gap-1.5 rounded-xl bg-slate-900 px-2 text-left text-white shadow-xs text-[11px] font-bold"
-          title={`Target $${todayTarget.toFixed(2)}`}
-        >
-          <Target className="h-3.5 w-3.5 text-lime-400" />
-          <span>${todayTarget.toFixed(2)}</span>
-        </button>
-
-        {/* Today's target KPI card on desktop */}
+      {/* Center: STRETCHED EXTENDED TARGET KPI CARD (Fills the space to the left as circled in Image 1) */}
+      <div className="hidden md:flex flex-1 items-center justify-center px-1 min-w-0 max-w-2xl">
         <button
           id="btn-today-target-header"
           onClick={() => onNavigate("targets")}
-          className="hidden md:flex h-11 shrink-0 items-center gap-2.5 rounded-2xl bg-slate-900 px-3.5 text-left text-white shadow-md transition-all hover:bg-slate-800 active:scale-95"
-          title={`Target $${todayTarget.toFixed(2)} · Net Profit $${todayNetProfit.toFixed(2)} · ${targetStatus} ${targetAmount}`}
+          className="h-11 w-full flex items-center justify-between gap-3 rounded-2xl bg-[#0B2559] border border-[#143573] px-3.5 text-left text-white shadow-sm transition-all hover:bg-[#071A3E] active:scale-[0.99] cursor-pointer"
+          title={`Target $${todayTarget.toFixed(2)} · Net Profit $${todayNetProfit.toFixed(2)} · ${targetStatus} ${targetAmount} · ${remainingDaysInMonth} maalmood baa harsan`}
         >
-          <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-lime-400/15">
-            <Target className="h-4 w-4 text-lime-400" />
-          </span>
-          <span className="flex min-w-0 flex-col leading-tight">
-            <span className="whitespace-nowrap text-[9px] font-bold uppercase tracking-wider text-slate-300">
-              Target <span className="text-white">${todayTarget.toFixed(2)}</span>
-              <span className="font-medium normal-case tracking-normal"> · Net Profit </span>
-              <span className="text-white">${todayNetProfit.toFixed(2)}</span>
+          {/* Target Icon & Target/Net Numbers */}
+          <div className="flex items-center gap-2.5 min-w-0">
+            <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-[#F7B928]/20">
+              <Target className="h-4 w-4 text-[#F7B928]" />
             </span>
-            <span className={`whitespace-nowrap text-[10px] font-extrabold uppercase ${targetDifference > 0 ? "text-lime-400" : targetDifference < 0 ? "text-red-400" : "text-slate-300"}`}>
-              {targetStatus} {targetAmount}
-            </span>
-          </span>
+            <div className="flex flex-col leading-tight min-w-0">
+              <div className="whitespace-nowrap text-[9px] font-bold uppercase tracking-wider text-slate-300">
+                Target: <strong className="text-[#F7B928]">${todayTarget.toFixed(2)}</strong>
+                <span className="font-normal text-slate-400"> · Net: </span>
+                <strong className="text-white">${todayNetProfit.toFixed(2)}</strong>
+              </div>
+              <div
+                className={`whitespace-nowrap text-[10px] font-black uppercase ${targetDifference > 0 ? "text-[#22C55E]" : targetDifference < 0 ? "text-rose-400" : "text-[#F7B928]"}`}
+              >
+                {targetStatus} {targetAmount}
+              </div>
+            </div>
+          </div>
+
+          {/* Center Progress Bar */}
+          <div className="hidden lg:flex flex-col items-center gap-1 px-3 flex-1 max-w-[140px]">
+            <div className="flex justify-between w-full text-[9px] font-bold text-slate-300">
+              <span>Target Progress</span>
+              <span className="text-[#F7B928]">{targetProgressPct ?? 0}%</span>
+            </div>
+            <div className="w-full h-1.5 bg-white/10 rounded-full overflow-hidden">
+              <div
+                className="h-full bg-[#F7B928] rounded-full transition-all duration-300"
+                style={{ width: `${Math.min(100, targetProgressPct ?? 0)}%` }}
+              />
+            </div>
+          </div>
+
+          {/* Right: Accurately calculated Days remaining in current month */}
+          <div className="flex items-center gap-2 border-l border-white/15 pl-3 shrink-0">
+            <div className="flex flex-col text-right leading-tight">
+              <span className="text-[9px] uppercase tracking-wider text-slate-300 font-semibold">
+                Bishan Harsan
+              </span>
+              <span className="text-xs font-black text-[#F7B928]">
+                {remainingDaysInMonth} Maalmood
+              </span>
+            </div>
+          </div>
+        </button>
+      </div>
+
+      {/* Right side: Mobile Target, Quick Add, Notifications, Profile */}
+      <div className="flex min-w-0 items-center justify-end gap-1.5 sm:gap-2.5 shrink-0">
+        {/* Today's target KPI card on mobile */}
+        <button
+          onClick={() => onNavigate("targets")}
+          className="flex md:hidden h-8 shrink-0 items-center gap-1.5 rounded-xl bg-[#0B2559] px-2 text-left text-white shadow-xs text-[11px] font-bold border border-[#143573]"
+          title={`Target $${todayTarget.toFixed(2)}`}
+        >
+          <Target className="h-3.5 w-3.5 text-[#F7B928]" />
+          <span>${todayTarget.toFixed(2)}</span>
         </button>
 
         {/* Quick Add Dropdown */}
@@ -145,10 +192,10 @@ export const Header: React.FC<HeaderProps> = ({
           <button
             id="btn-quick-add-header"
             onClick={() => setShowQuickAdd(!showQuickAdd)}
-            className="flex items-center gap-1.5 bg-slate-900 hover:bg-slate-800 text-white p-2 sm:px-3.5 sm:py-2 rounded-xl text-xs font-semibold shadow-xs transition-all active:scale-95"
+            className="flex items-center gap-1.5 bg-[#0B2559] hover:bg-[#071A3E] text-white p-2 sm:px-3.5 sm:py-2 rounded-xl text-xs font-semibold shadow-xs transition-all active:scale-95 border border-[#143573]"
             aria-label="Quick Add"
           >
-            <Plus className="w-4 h-4 text-lime-400 stroke-[3]" />
+            <Plus className="w-4 h-4 text-[#F7B928] stroke-[3]" />
             <span className="hidden sm:inline">Quick Add</span>
           </button>
 
@@ -259,7 +306,9 @@ export const Header: React.FC<HeaderProps> = ({
         </div>
 
         {/* Multi-Portal Launcher */}
-        <div className="hidden sm:block"><PortalLauncher /></div>
+        <div className="hidden sm:block">
+          <PortalLauncher />
+        </div>
 
         {/* Notifications Dropdown */}
         <div className="relative hidden sm:block" ref={notifRef}>

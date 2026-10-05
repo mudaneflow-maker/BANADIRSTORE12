@@ -60,6 +60,7 @@ export type DayRecord = {
 
 export type MonthCycle = {
   monthKey: string; // YYYY-MM
+  totalDays: number;
   monthlyTarget: number;
   openingCarriedBurden: number;
   openingDeficit: number; // alias
@@ -233,7 +234,9 @@ export function addFundTransfer(t: Omit<FundTransfer, "id" | "createdAt">): Fund
   return rec;
 }
 
-export function addReconciliation(r: Omit<Reconciliation, "id" | "createdAt" | "difference">): Reconciliation {
+export function addReconciliation(
+  r: Omit<Reconciliation, "id" | "createdAt" | "difference">,
+): Reconciliation {
   load();
   const rec: Reconciliation = {
     ...r,
@@ -257,7 +260,10 @@ export function monthlyPlanFor(_monthKey: string, cfg: FinEngineConfig): number 
   return cfg.monthlyBaseTarget ?? DEFAULT_MONTHLY_TARGET;
 }
 
-export function pettyCashFundBalance(fundTransfers: FundTransfer[], expensesPaidFromFund: number): number {
+export function pettyCashFundBalance(
+  fundTransfers: FundTransfer[],
+  expensesPaidFromFund: number,
+): number {
   const funded = fundTransfers.reduce((s, t) => s + t.amount, 0);
   return Math.round((funded - expensesPaidFromFund) * 100) / 100;
 }
@@ -438,6 +444,7 @@ export function computeEngine(
 
     cycles.push({
       monthKey: mk,
+      totalDays,
       monthlyTarget,
       openingCarriedBurden,
       openingDeficit: openingCarriedBurden,
@@ -468,13 +475,19 @@ export function computeEngine(
   }
 
   const activeCycle = cycles[cycles.length - 1] ?? null;
-  const todayDayNumber = Number(todayDate.slice(8, 10));
+  const [curYear, curMonth, curDay] = (todayDate || "").split("-").map(Number);
+  const todayDayNumber = !isNaN(curDay) && curDay > 0 ? curDay : new Date().getDate();
+  const calculatedMonthDays =
+    !isNaN(curYear) && !isNaN(curMonth) && curYear > 0 && curMonth > 0
+      ? new Date(curYear, curMonth, 0).getDate()
+      : new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0).getDate();
+
   const todayRec =
     activeCycle?.days.find((d) => d.date === todayDate) ??
     activeCycle?.days[Math.min(todayDayNumber - 1, (activeCycle?.days.length ?? 1) - 1)] ??
     null;
 
-  const totalDays = activeCycle ? activeCycle.totalDays : 31;
+  const totalDays = activeCycle?.totalDays ?? calculatedMonthDays;
   const remainingCalendarDays = Math.max(0, totalDays - todayDayNumber);
 
   // Next day target
@@ -486,7 +499,8 @@ export function computeEngine(
     } else {
       // First day of next month
       const nextMonthRequirement =
-        (cfg.monthlyBaseTarget ?? DEFAULT_MONTHLY_TARGET) + (activeCycle.monthEndRemainingBurden ?? 0);
+        (cfg.monthlyBaseTarget ?? DEFAULT_MONTHLY_TARGET) +
+        (activeCycle.monthEndRemainingBurden ?? 0);
       nextDayTarget = nextMonthRequirement / 30; // standard approximation for next month
     }
   }
@@ -495,10 +509,10 @@ export function computeEngine(
     cycles,
     activeCycle,
     today: todayRec,
-    todayDefaultTarget: todayRec?.defaultDailyTarget ?? (DEFAULT_MONTHLY_TARGET / 31),
+    todayDefaultTarget: todayRec?.defaultDailyTarget ?? DEFAULT_MONTHLY_TARGET / 31,
     todayBurden: todayRec?.activeBurden ?? 0,
     todaySurplusReduction: todayRec?.surplusReduction ?? 0,
-    todayFinalTarget: todayRec?.requiredTarget ?? (DEFAULT_MONTHLY_TARGET / 31),
+    todayFinalTarget: todayRec?.requiredTarget ?? DEFAULT_MONTHLY_TARGET / 31,
     todaySales: todayRec?.actualSales ?? 0,
     todayRemaining: todayRec ? Math.max(0, todayRec.requiredTarget - todayRec.actualSales) : 0,
     todayShortfall: todayRec?.shortfall ?? 0,

@@ -64,75 +64,75 @@
 
 :root {
   --radius: 0.625rem;
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.129 0.042 264.695);
+  --background: oklch(0.985 0.005 250);
+  --foreground: oklch(0.24 0.12 258);
   --card: oklch(1 0 0);
-  --card-foreground: oklch(0.129 0.042 264.695);
+  --card-foreground: oklch(0.24 0.12 258);
   --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.129 0.042 264.695);
-  --primary: oklch(0.208 0.042 265.755);
-  --primary-foreground: oklch(0.984 0.003 247.858);
-  --secondary: oklch(0.968 0.007 247.896);
-  --secondary-foreground: oklch(0.208 0.042 265.755);
-  --muted: oklch(0.968 0.007 247.896);
-  --muted-foreground: oklch(0.554 0.046 257.417);
-  --accent: oklch(0.968 0.007 247.896);
-  --accent-foreground: oklch(0.208 0.042 265.755);
+  --popover-foreground: oklch(0.24 0.12 258);
+  --primary: oklch(0.26 0.13 258); /* #0B2559 Banadir Royal Navy */
+  --primary-foreground: oklch(0.99 0 0);
+  --secondary: oklch(0.96 0.02 258);
+  --secondary-foreground: oklch(0.26 0.13 258);
+  --muted: oklch(0.96 0.01 258);
+  --muted-foreground: oklch(0.52 0.03 258);
+  --accent: oklch(0.79 0.17 78); /* #F7B928 Banadir Sun Gold */
+  --accent-foreground: oklch(0.18 0.10 258); /* #071A3E Deep Navy */
   --destructive: oklch(0.577 0.245 27.325);
-  --positive: oklch(0.38 0.12 155);
+  --positive: oklch(0.61 0.17 150); /* #0F9D58 Banadir Emerald */
   --destructive-foreground: oklch(0.984 0.003 247.858);
-  --border: oklch(0.929 0.013 255.508);
-  --input: oklch(0.929 0.013 255.508);
-  --ring: oklch(0.704 0.04 256.788);
-  --chart-1: oklch(0.646 0.222 41.116);
-  --chart-2: oklch(0.6 0.118 184.704);
-  --chart-3: oklch(0.398 0.07 227.392);
-  --chart-4: oklch(0.828 0.189 84.429);
-  --chart-5: oklch(0.769 0.188 70.08);
-  --sidebar: oklch(0.984 0.003 247.858);
-  --sidebar-foreground: oklch(0.129 0.042 264.695);
-  --sidebar-primary: oklch(0.208 0.042 265.755);
-  --sidebar-primary-foreground: oklch(0.984 0.003 247.858);
-  --sidebar-accent: oklch(0.968 0.007 247.896);
-  --sidebar-accent-foreground: oklch(0.208 0.042 265.755);
-  --sidebar-border: oklch(0.929 0.013 255.508);
-  --sidebar-ring: oklch(0.704 0.04 256.788);
+  --border: oklch(0.92 0.015 258);
+  --input: oklch(0.92 0.015 258);
+  --ring: oklch(0.26 0.13 258);
+  --chart-1: oklch(0.26 0.13 258); /* Royal Navy */
+  --chart-2: oklch(0.79 0.17 78);  /* Golden Yellow */
+  --chart-3: oklch(0.61 0.17 150); /* Emerald Green */
+  --chart-4: oklch(0.45 0.14 258); /* Soft Navy/Blue */
+  --chart-5: oklch(0.70 0.15 65);  /* Warm Amber */
+  --sidebar: oklch(0.18 0.10 258); /* #071B42 Deep Royal Navy */
+  --sidebar-foreground: oklch(0.92 0.02 258);
+  --sidebar-primary: oklch(0.79 0.17 78); /* Gold */
+  --sidebar-primary-foreground: oklch(0.18 0.10 258);
+  --sidebar-accent: oklch(0.25 0.09 258);
+  --sidebar-accent-foreground: oklch(0.99 0 0);
+  --sidebar-border: oklch(0.25 0.08 258);
+  --sidebar-ring: oklch(0.79 0.17 78);
 }
 
 .dark {
-  --background: oklch(0.129 0.042 264.695);
+  --background: oklch(0.14 0.06 258);
   --foreground: oklch(0.984 0.003 247.858);
-  --card: oklch(0.208 0.042 265.755);
+  --card: oklch(0.18 0.08 258);
   --card-foreground: oklch(0.984 0.003 247.858);
-  --popover: oklch(0.208 0.042 265.755);
+  --popover: oklch(0.18 0.08 258);
   --popover-foreground: oklch(0.984 0.003 247.858);
-  --primary: oklch(0.929 0.013 255.508);
-  --primary-foreground: oklch(0.208 0.042 265.755);
-  --secondary: oklch(0.279 0.041 260.031);
+  --primary: oklch(0.79 0.17 78); /* Gold in dark mode */
+  --primary-foreground: oklch(0.18 0.10 258);
+  --secondary: oklch(0.25 0.08 258);
   --secondary-foreground: oklch(0.984 0.003 247.858);
-  --muted: oklch(0.279 0.041 260.031);
+  --muted: oklch(0.25 0.08 258);
   --muted-foreground: oklch(0.704 0.04 256.788);
-  --accent: oklch(0.279 0.041 260.031);
-  --accent-foreground: oklch(0.984 0.003 247.858);
+  --accent: oklch(0.79 0.17 78);
+  --accent-foreground: oklch(0.18 0.10 258);
   --destructive: oklch(0.704 0.191 22.216);
-  --positive: oklch(0.78 0.14 155);
+  --positive: oklch(0.61 0.17 150);
   --destructive-foreground: oklch(0.984 0.003 247.858);
-  --border: oklch(1 0 0 / 10%);
+  --border: oklch(1 0 0 / 12%);
   --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.551 0.027 264.364);
-  --chart-1: oklch(0.488 0.243 264.376);
-  --chart-2: oklch(0.696 0.17 162.48);
-  --chart-3: oklch(0.769 0.188 70.08);
-  --chart-4: oklch(0.627 0.265 303.9);
+  --ring: oklch(0.79 0.17 78);
+  --chart-1: oklch(0.79 0.17 78);
+  --chart-2: oklch(0.61 0.17 150);
+  --chart-3: oklch(0.48 0.18 258);
+  --chart-4: oklch(0.70 0.15 65);
   --chart-5: oklch(0.645 0.246 16.439);
-  --sidebar: oklch(0.208 0.042 265.755);
+  --sidebar: oklch(0.14 0.06 258);
   --sidebar-foreground: oklch(0.984 0.003 247.858);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.984 0.003 247.858);
-  --sidebar-accent: oklch(0.279 0.041 260.031);
+  --sidebar-primary: oklch(0.79 0.17 78);
+  --sidebar-primary-foreground: oklch(0.18 0.10 258);
+  --sidebar-accent: oklch(0.22 0.08 258);
   --sidebar-accent-foreground: oklch(0.984 0.003 247.858);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.551 0.027 264.364);
+  --sidebar-border: oklch(1 0 0 / 12%);
+  --sidebar-ring: oklch(0.79 0.17 78);
 }
 
 @layer base {
@@ -146,69 +146,158 @@
   }
 }
 
-/* Store operations palette — dashboard and navigation only. */
+/* Store operations palette — aligned with Banadir Online brand */
 :root {
-  --dash-forest: oklch(0.37 0.085 160);
-  --dash-mint: oklch(0.77 0.105 161);
-  --dash-clay: oklch(0.59 0.108 35);
-  --dash-subtle: oklch(0.53 0.022 165);
-  --dash-line: oklch(0.89 0.018 165);
-  --sidebar: oklch(0.975 0.012 165);
-  --sidebar-foreground: oklch(0.24 0.031 165);
-  --sidebar-primary: var(--dash-forest);
-  --sidebar-primary-foreground: oklch(0.99 0.008 165);
-  --sidebar-accent: oklch(0.9 0.039 161);
-  --sidebar-accent-foreground: oklch(0.28 0.07 160);
-  --sidebar-border: var(--dash-line);
+  --dash-forest: oklch(0.26 0.13 258); /* Banadir Navy */
+  --dash-mint: oklch(0.79 0.17 78);    /* Banadir Gold */
+  --dash-clay: oklch(0.61 0.17 150);   /* Banadir Green */
+  --dash-subtle: oklch(0.52 0.03 258);
+  --dash-line: oklch(0.92 0.015 258);
+  --sidebar: oklch(0.18 0.10 258);
+  --sidebar-foreground: oklch(0.92 0.02 258);
+  --sidebar-primary: oklch(0.79 0.17 78);
+  --sidebar-primary-foreground: oklch(0.18 0.10 258);
+  --sidebar-accent: oklch(0.25 0.09 258);
+  --sidebar-accent-foreground: oklch(0.99 0 0);
+  --sidebar-border: oklch(0.25 0.08 258);
 }
 .dark {
-  --dash-forest: oklch(0.72 0.105 161);
-  --dash-mint: oklch(0.77 0.105 161);
+  --dash-forest: oklch(0.79 0.17 78);
+  --dash-mint: oklch(0.61 0.17 150);
   --dash-clay: oklch(0.7 0.1 35);
-  --dash-subtle: oklch(0.7 0.02 165);
-  --dash-line: oklch(0.36 0.025 165);
-  --sidebar: oklch(0.2 0.025 165);
-  --sidebar-foreground: oklch(0.95 0.012 165);
-  --sidebar-primary: oklch(0.65 0.09 160);
-  --sidebar-primary-foreground: oklch(0.16 0.03 165);
-  --sidebar-accent: oklch(0.32 0.045 161);
-  --sidebar-accent-foreground: oklch(0.96 0.012 165);
+  --dash-subtle: oklch(0.7 0.02 258);
+  --dash-line: oklch(0.36 0.025 258);
+  --sidebar: oklch(0.14 0.06 258);
+  --sidebar-foreground: oklch(0.95 0.012 258);
+  --sidebar-primary: oklch(0.79 0.17 78);
+  --sidebar-primary-foreground: oklch(0.18 0.10 258);
+  --sidebar-accent: oklch(0.25 0.08 258);
+  --sidebar-accent-foreground: oklch(0.96 0.012 258);
   --sidebar-border: var(--dash-line);
 }
-.dashboard-surface { background: oklch(0.972 0.011 160); font-family: 'Manrope', sans-serif; }
-.dark .dashboard-surface { background: var(--background); }
-.dashboard-heading { font-family: 'Sora', sans-serif; letter-spacing: 0; }
-.dashboard-kicker { font-family: 'Manrope', sans-serif; font-size: 10px; font-weight: 800; letter-spacing: 0; }
-.dashboard-feature, .dashboard-metric, .dashboard-panel, .dashboard-date, .dashboard-action { border-radius: 4px; }
-.dashboard-feature-profit { background: oklch(0.36 0.083 160); }
-.dark .dashboard-feature-profit { background: oklch(0.35 0.08 160); }
-.dashboard-feature-target, .dashboard-feature-summary, .dashboard-metric { background: var(--card); }
-.dashboard-metric:hover, .dashboard-action:hover { border-color: var(--dash-forest); }
-.dashboard-icon-mint { color: var(--dash-forest); }
-.dashboard-icon-teal { color: var(--dash-mint); }
-.dashboard-icon-clay { color: var(--dash-clay); }
-.dashboard-sidebar { font-family: 'Manrope', sans-serif; }
-.dashboard-sidebar-active { box-shadow: inset 3px 0 0 var(--sidebar-primary); }
-.dashboard-sidebar-nav { scrollbar-width: thin; scrollbar-color: var(--sidebar-border) transparent; }
-@media (prefers-reduced-motion: reduce) { .dashboard-surface *, .dashboard-sidebar * { animation-duration: .01ms !important; transition-duration: .01ms !important; } }
+.dashboard-surface {
+  background: oklch(0.985 0.005 250);
+  font-family: "Manrope", sans-serif;
+}
+.dark .dashboard-surface {
+  background: var(--background);
+}
+.dashboard-heading {
+  font-family: "Sora", sans-serif;
+  letter-spacing: 0;
+}
+.dashboard-kicker {
+  font-family: "Manrope", sans-serif;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0;
+}
+.dashboard-feature,
+.dashboard-metric,
+.dashboard-panel,
+.dashboard-date,
+.dashboard-action {
+  border-radius: 4px;
+}
+.dashboard-feature-profit {
+  background: linear-gradient(135deg, #0B2559 0%, #071B42 100%);
+  color: #FFFFFF;
+}
+.dark .dashboard-feature-profit {
+  background: linear-gradient(135deg, #0B2559 0%, #071B42 100%);
+  color: #FFFFFF;
+}
+.dashboard-feature-target,
+.dashboard-feature-summary,
+.dashboard-metric {
+  background: var(--card);
+}
+.dashboard-metric:hover,
+.dashboard-action:hover {
+  border-color: #0B2559;
+}
+.dashboard-icon-mint {
+  color: #0B2559;
+}
+.dashboard-icon-teal {
+  color: #F7B928;
+}
+.dashboard-icon-clay {
+  color: #0F9D58;
+}
+.dashboard-sidebar {
+  font-family: "Manrope", sans-serif;
+}
+.dashboard-sidebar-active {
+  box-shadow: inset 3px 0 0 var(--sidebar-primary);
+}
+.dashboard-sidebar-nav {
+  scrollbar-width: thin;
+  scrollbar-color: var(--sidebar-border) transparent;
+}
+@media (prefers-reduced-motion: reduce) {
+  .dashboard-surface *,
+  .dashboard-sidebar * {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
 
-@keyframes dashboard-pop-in { from { opacity: 0; transform: translateY(6px) scale(.98); } to { opacity: 1; transform: none; } }
-.dashboard-pop { animation: dashboard-pop-in .45s cubic-bezier(.2,.8,.2,1) both; }
-.dashboard-feature-profit .dashboard-heading { animation: dashboard-pop-in .6s cubic-bezier(.2,.8,.2,1) both; }
-@media (prefers-reduced-motion: reduce) { .dashboard-pop, .dashboard-feature-profit .dashboard-heading { animation: none; } }
+@keyframes dashboard-pop-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.dashboard-pop {
+  animation: dashboard-pop-in 0.45s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+.dashboard-feature-profit .dashboard-heading {
+  animation: dashboard-pop-in 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+@media (prefers-reduced-motion: reduce) {
+  .dashboard-pop,
+  .dashboard-feature-profit .dashboard-heading {
+    animation: none;
+  }
+}
 
 /* Mobile polish: popups fit the screen, tables scroll sideways, no iOS zoom on inputs */
 @media (max-width: 639px) {
-  .fixed.inset-0 { overflow-y: auto; overscroll-behavior: contain; }
+  .fixed.inset-0 {
+    overflow-y: auto;
+    overscroll-behavior: contain;
+  }
   .fixed.inset-0 > div:not(:empty),
   .fixed.inset-0 > form {
     max-height: calc(100dvh - 1rem);
     overflow-y: auto;
     max-width: calc(100vw - 1rem);
   }
-  main table { display: block; max-width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; }
-  main th, main td { white-space: nowrap; }
-  input, select, textarea { font-size: 16px !important; }
-  main { overflow-x: hidden; }
-  main img { max-width: 100%; height: auto; }
+  main table {
+    display: block;
+    max-width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  main th,
+  main td {
+    white-space: nowrap;
+  }
+  input,
+  select,
+  textarea {
+    font-size: 16px !important;
+  }
+  main {
+    overflow-x: hidden;
+  }
+  main img {
+    max-width: 100%;
+    height: auto;
+  }
 }

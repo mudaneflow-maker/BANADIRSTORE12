@@ -573,7 +573,7 @@ export default function PortalApp({ token }: { token: string }) {
         onClose={() => setStage("methods")}
         title="Xaqiiji Lacag Bixinta"
       >
-        <p className="text-center text-sm text-slate-500">MA RABTAA INAAD U DIRTO BANADIR STORE?</p>
+        <p className="text-center text-sm text-slate-500">MA RABTAA INAAD U DIRTO BANADIR ONLINE?</p>
         <p className="mt-2 text-center text-4xl font-black text-slate-900">
           {money(mode === "advance" ? order.advanceDue : order.fullDue)}
         </p>

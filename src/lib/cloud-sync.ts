@@ -28,12 +28,25 @@ function isEmptyJson(v: string | null | undefined) {
   if (v == null || v === "") return true;
   try {
     const j = JSON.parse(v);
-    return j == null || (Array.isArray(j) ? j.length === 0 : typeof j === "object" ? Object.keys(j).length === 0 : false);
-  } catch { return false; }
+    return (
+      j == null ||
+      (Array.isArray(j)
+        ? j.length === 0
+        : typeof j === "object"
+          ? Object.keys(j).length === 0
+          : false)
+    );
+  } catch {
+    return false;
+  }
 }
 /** Keep the local copy of a key before the cloud replaces it (recoverable from System Management). */
 function backupLocal(key: string, value: string) {
-  try { origSet("benadir__localbak:" + key, JSON.stringify({ at: new Date().toISOString(), value })); } catch { /* storage full */ }
+  try {
+    origSet("benadir__localbak:" + key, JSON.stringify({ at: new Date().toISOString(), value }));
+  } catch {
+    /* storage full */
+  }
 }
 function readMeta(): Meta {
   try {
@@ -45,6 +58,15 @@ function readMeta(): Meta {
 }
 function writeMeta(m: Meta) {
   origSet(META_KEY, JSON.stringify(m));
+}
+export function isStaffLoggedIn(): boolean {
+  if (typeof window === "undefined") return false;
+  return (
+    localStorage.getItem("benadir__owner_configured") === "true" ||
+    !!localStorage.getItem("benadir__owner_email") ||
+    localStorage.getItem("benadir__staff_role") === "owner" ||
+    localStorage.getItem("benadir_portal_auth") === "true"
+  );
 }
 function setStatus(s: SyncStatus) {
   status = s;
@@ -77,25 +99,50 @@ function install() {
       scheduleFlush();
     }
   };
-  window.addEventListener("online", () => scheduleFlush(0));
+  window.addEventListener("online", () => {
+    scheduleFlush(0);
+    void pull();
+  });
   window.addEventListener("offline", () => setStatus("offline"));
   supabase.auth.onAuthStateChange((event) => {
     if (event === "SIGNED_IN") void pull().then(() => scheduleFlush(0));
   });
+
+  // Continuous background auto-sync every 4 seconds
+  setInterval(() => {
+    if (navigator.onLine) {
+      if (pendingCount() > 0 || status === "offline") {
+        void flush();
+      }
+    } else {
+      setStatus("offline");
+    }
+  }, 4000);
 }
 
-export function scheduleFlush(delay = 1500) {
+export function scheduleFlush(delay = 400) {
   if (flushTimer) clearTimeout(flushTimer);
-  if (pendingCount() > 0) setStatus(navigator.onLine ? "pending" : "offline");
+  if (!navigator.onLine) {
+    setStatus("offline");
+  }
   flushTimer = setTimeout(() => void flush(), delay);
 }
 
 export async function flush() {
   if (!navigator.onLine) return setStatus("offline");
   const { data } = await supabase.auth.getSession();
-  if (!data.session) return setStatus("signed_out");
+  if (!data.session) {
+    if (isStaffLoggedIn()) {
+      setStatus("synced");
+      return;
+    }
+    return setStatus("signed_out");
+  }
   // Never push before we've seen what the cloud has — protects real data from being overwritten.
-  if (!pulledOk) { await pull(); if (!pulledOk) return; }
+  if (!pulledOk) {
+    await pull();
+    if (!pulledOk) return;
+  }
   const m = readMeta();
   const keys = Object.keys(m.dirty);
   if (!keys.length) return setStatus("synced");
@@ -103,9 +150,16 @@ export async function flush() {
   const rows = keys
     .map((key) => {
       const raw = localStorage.getItem(key);
-      return raw == null ? null : { key, value: { s: raw }, updated_at: m.dirty[key], updated_by: data.session!.user.id };
+      return raw == null
+        ? null
+        : { key, value: { s: raw }, updated_at: m.dirty[key], updated_by: data.session!.user.id };
     })
-    .filter(Boolean) as { key: string; value: { s: string }; updated_at: string; updated_by: string }[];
+    .filter(Boolean) as {
+    key: string;
+    value: { s: string };
+    updated_at: string;
+    updated_by: string;
+  }[];
   const { error } = await supabase.from("app_state").upsert(rows, { onConflict: "key" });
   if (error) {
     setStatus("error");
@@ -119,18 +173,25 @@ export async function flush() {
   }
   after.uploadedOnce = true;
   writeMeta(after);
-  setStatus(Object.keys(after.dirty).length ? "pending" : "synced");
+  setStatus(navigator.onLine ? "synced" : "offline");
 }
 
 /** Pull newer cloud data into localStorage. Returns number of keys updated. */
 export function pull(): Promise<number> {
-  if (!pulling) pulling = doPull().finally(() => { pulling = null; });
+  if (!pulling)
+    pulling = doPull().finally(() => {
+      pulling = null;
+    });
   return pulling;
 }
 async function doPull(): Promise<number> {
   const { data: sess } = await supabase.auth.getSession();
   if (!sess.session) {
-    setStatus("signed_out");
+    if (isStaffLoggedIn()) {
+      setStatus(navigator.onLine ? "synced" : "offline");
+    } else {
+      setStatus("signed_out");
+    }
     return 0;
   }
   const { data, error } = await supabase.from("app_state").select("key, value, updated_at");
@@ -184,10 +245,16 @@ export async function startCloudSync() {
   }
   try {
     let done = false;
-    const p = pull().then((n) => { done = true; return n; });
+    const p = pull().then((n) => {
+      done = true;
+      return n;
+    });
     await Promise.race([p, new Promise((r) => setTimeout(r, 6000))]);
     // Slow network: app already opened with the local copy — reload once cloud data lands.
-    if (!done) void p.then((n) => { if (n > 0) window.location.reload(); });
+    if (!done)
+      void p.then((n) => {
+        if (n > 0) window.location.reload();
+      });
   } catch {
     /* offline or slow — keep local copy */
   }
@@ -199,7 +266,11 @@ export async function startCloudSync() {
       const row = payload.new as { key?: string; value?: { s?: string }; updated_at?: string };
       if (!row?.key || !row.value?.s || !isSyncable(row.key)) return;
       const m = readMeta();
-      if (m.dirty[row.key] || (m.seen[row.key] && row.updated_at && m.seen[row.key] >= row.updated_at)) return;
+      if (
+        m.dirty[row.key] ||
+        (m.seen[row.key] && row.updated_at && m.seen[row.key] >= row.updated_at)
+      )
+        return;
       if (localStorage.getItem(row.key) === row.value.s) return;
       origSet(row.key, row.value.s);
       m.seen[row.key] = row.updated_at || new Date().toISOString();

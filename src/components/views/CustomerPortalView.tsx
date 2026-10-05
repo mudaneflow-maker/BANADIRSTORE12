@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo } from "react";
 import {
   Package,
   CheckCircle2,
@@ -30,15 +30,15 @@ import {
   XCircle,
   AlertCircle,
   Car,
-} from 'lucide-react';
-import { Order, OrderItem, Product } from '../../types';
-import { useStore } from '../../context/StoreContext';
+} from "lucide-react";
+import { Order, OrderItem, Product } from "../../types";
+import { useStore } from "../../context/StoreContext";
 import {
   generateUssdCode,
   getOrderTrackingStages,
   buildWhatsAppShareUrl,
   MOGADISHU_DISTRICTS,
-} from '../../utils/portalConstants';
+} from "../../utils/portalConstants";
 
 interface CustomerPortalViewProps {
   order: Order;
@@ -69,7 +69,7 @@ export const CustomerPortalView: React.FC<CustomerPortalViewProps> = ({
   } = useStore();
 
   // Active portal tab: 'current' | 'history' | 'shop'
-  const [activeTab, setActiveTab] = useState<'current' | 'history' | 'shop'>('current');
+  const [activeTab, setActiveTab] = useState<"current" | "history" | "shop">("current");
 
   // Accidental exit safeguard state
   const [exitAttempts, setExitAttempts] = useState<number>(0);
@@ -77,24 +77,28 @@ export const CustomerPortalView: React.FC<CustomerPortalViewProps> = ({
 
   // Payment flow splash state
   // 'idle' -> 'method_select' -> 'confirm_prompt' -> 'ussd_active'
-  const [paymentStep, setPaymentStep] = useState<'idle' | 'method_select' | 'confirm_prompt' | 'ussd_active'>('idle');
-  const [paymentTypeChoice, setPaymentTypeChoice] = useState<'advance' | 'full'>('full');
-  const [selectedMethod, setSelectedMethod] = useState<'EVC Plus' | 'E-Dahab' | 'Jeeb'>('EVC Plus');
-  const [senderPhoneInput, setSenderPhoneInput] = useState<string>(order.customerPhone || '');
-  const [transactionRefInput, setTransactionRefInput] = useState<string>('');
+  const [paymentStep, setPaymentStep] = useState<
+    "idle" | "method_select" | "confirm_prompt" | "ussd_active"
+  >("idle");
+  const [paymentTypeChoice, setPaymentTypeChoice] = useState<"advance" | "full">("full");
+  const [selectedMethod, setSelectedMethod] = useState<"EVC Plus" | "E-Dahab" | "Jeeb">("EVC Plus");
+  const [senderPhoneInput, setSenderPhoneInput] = useState<string>(order.customerPhone || "");
+  const [transactionRefInput, setTransactionRefInput] = useState<string>("");
   const [isSubmittingPayment, setIsSubmittingPayment] = useState<boolean>(false);
   const [copiedUssd, setCopiedUssd] = useState<boolean>(false);
 
   // Admin verification action states
   const [showAdminRejectModal, setShowAdminRejectModal] = useState<boolean>(false);
-  const [rejectionReasonInput, setRejectionReasonInput] = useState<string>('');
-  const [adminVerificationRef, setAdminVerificationRef] = useState<string>('');
+  const [rejectionReasonInput, setRejectionReasonInput] = useState<string>("");
+  const [adminVerificationRef, setAdminVerificationRef] = useState<string>("");
 
   // Re-order / Continue Shopping Cart state
   const [shopCart, setShopCart] = useState<Record<string, number>>({});
-  const [shopSearch, setShopSearch] = useState<string>('');
+  const [shopSearch, setShopSearch] = useState<string>("");
   const [isPlacingShopOrder, setIsPlacingShopOrder] = useState<boolean>(false);
-  const [shopDeliveryFeePayer, setShopDeliveryFeePayer] = useState<'Customer' | 'Business'>('Customer');
+  const [shopDeliveryFeePayer, setShopDeliveryFeePayer] = useState<"Customer" | "Business">(
+    "Customer",
+  );
 
   // PWA Install prompt state
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
@@ -107,14 +111,14 @@ export const CustomerPortalView: React.FC<CustomerPortalViewProps> = ({
       setDeferredPrompt(e);
     };
 
-    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+    window.addEventListener("beforeinstallprompt", handleBeforeInstallPrompt);
 
-    if (window.matchMedia('(display-mode: standalone)').matches) {
+    if (window.matchMedia("(display-mode: standalone)").matches) {
       setIsInstalled(true);
     }
 
     return () => {
-      window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+      window.removeEventListener("beforeinstallprompt", handleBeforeInstallPrompt);
     };
   }, []);
 
@@ -122,7 +126,7 @@ export const CustomerPortalView: React.FC<CustomerPortalViewProps> = ({
     if (deferredPrompt) {
       deferredPrompt.prompt();
       const { outcome } = await deferredPrompt.userChoice;
-      if (outcome === 'accepted') {
+      if (outcome === "accepted") {
         setIsInstalled(true);
       }
       setDeferredPrompt(null);
@@ -132,7 +136,9 @@ export const CustomerPortalView: React.FC<CustomerPortalViewProps> = ({
       if (isIos) {
         setShowIosGuide(true);
       } else {
-        alert('Si aad app-ka ugu darto shaashaddaada, taabo saddexda dhibcood ee browser-kaaga oo dooro "Add to Home Screen" ama "Install App".');
+        alert(
+          'Si aad app-ka ugu darto shaashaddaada, taabo saddexda dhibcood ee browser-kaaga oo dooro "Add to Home Screen" ama "Install App".',
+        );
       }
     }
   };
@@ -144,11 +150,13 @@ export const CustomerPortalView: React.FC<CustomerPortalViewProps> = ({
 
   // Auto-open payment splash popup on link load if balance remains & not yet confirmed
   const [isPaymentSplashOpen, setIsPaymentSplashOpen] = useState<boolean>(() => {
-    return remainingBalance > 0 && order.paymentStatus !== 'customer_confirmed';
+    return remainingBalance > 0 && order.paymentStatus !== "customer_confirmed";
   });
   const [splashExitConfirm, setSplashExitConfirm] = useState<boolean>(false);
   const [showInitialSplash, setShowInitialSplash] = useState<boolean>(true);
-  const [hasCustomerPaidChoice, setHasCustomerPaidChoice] = useState<'unanswered' | 'yes' | 'no'>('unanswered');
+  const [hasCustomerPaidChoice, setHasCustomerPaidChoice] = useState<"unanswered" | "yes" | "no">(
+    "unanswered",
+  );
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -159,13 +167,13 @@ export const CustomerPortalView: React.FC<CustomerPortalViewProps> = ({
 
   // Selected payment amount
   const paymentAmountToPay = useMemo(() => {
-    if (paymentTypeChoice === 'advance') {
+    if (paymentTypeChoice === "advance") {
       // If order has an advanceAmount configured and it hasn't been paid yet
       if (order.advanceAmount && order.paidAmount < order.advanceAmount) {
         return Math.min(remainingBalance, order.advanceAmount - order.paidAmount);
       }
       // Default advance: 50% of remaining, or at least delivery fee + 30%, rounded up
-      const fee = (order.deliveryFeePayer || 'Customer') === 'Customer' ? order.deliveryFee : 0;
+      const fee = (order.deliveryFeePayer || "Customer") === "Customer" ? order.deliveryFee : 0;
       const half = Math.ceil(remainingBalance * 0.5);
       return Math.max(1, Math.min(remainingBalance, Math.max(fee, half)));
     }
@@ -186,7 +194,7 @@ export const CustomerPortalView: React.FC<CustomerPortalViewProps> = ({
     return orders.filter(
       (o) =>
         (order.customerId && o.customerId === order.customerId) ||
-        (order.customerPhone && o.customerPhone && o.customerPhone === order.customerPhone)
+        (order.customerPhone && o.customerPhone && o.customerPhone === order.customerPhone),
     );
   }, [orders, order]);
 
@@ -200,7 +208,7 @@ export const CustomerPortalView: React.FC<CustomerPortalViewProps> = ({
       if (onClose) {
         onClose();
       } else {
-        window.location.href = '/';
+        window.location.href = "/";
       }
     }
   };
@@ -215,8 +223,8 @@ export const CustomerPortalView: React.FC<CustomerPortalViewProps> = ({
   // Submit Payment Confirmation by Customer
   const handleCustomerSubmitPayment = (e: React.FormEvent) => {
     e.preventDefault();
-    if (order.paymentStatus === 'customer_confirmed') {
-      alert('Lacag bixintaada mar hore ayaa la diray oo maamulku ku jiraa xaqiijinteeda!');
+    if (order.paymentStatus === "customer_confirmed") {
+      alert("Lacag bixintaada mar hore ayaa la diray oo maamulku ku jiraa xaqiijinteeda!");
       return;
     }
 
@@ -227,26 +235,26 @@ export const CustomerPortalView: React.FC<CustomerPortalViewProps> = ({
       paymentTypeChoice,
       selectedMethod,
       senderPhoneInput.trim(),
-      transactionRefInput.trim() || undefined
+      transactionRefInput.trim() || undefined,
     );
     setIsSubmittingPayment(false);
-    setPaymentStep('idle');
+    setPaymentStep("idle");
   };
 
   // Admin Verification Handlers
   const handleAdminVerify = () => {
     verifyOrderPayment(order.id, adminVerificationRef || undefined);
-    setAdminVerificationRef('');
+    setAdminVerificationRef("");
   };
 
   const handleAdminReject = () => {
     if (!rejectionReasonInput.trim()) {
-      alert('Fadlan geli sababta diidmada (tusaale: SMS lama helin / lacagtu ma soo dhicin)');
+      alert("Fadlan geli sababta diidmada (tusaale: SMS lama helin / lacagtu ma soo dhicin)");
       return;
     }
     rejectOrderPayment(order.id, rejectionReasonInput.trim());
     setShowAdminRejectModal(false);
-    setRejectionReasonInput('');
+    setRejectionReasonInput("");
   };
 
   const handleAdminCompleteOrder = () => {
@@ -301,12 +309,12 @@ export const CustomerPortalView: React.FC<CustomerPortalViewProps> = ({
     setIsPlacingShopOrder(true);
 
     const deliveryFee = 2.0;
-    const effectiveFee = shopDeliveryFeePayer === 'Customer' ? deliveryFee : 0;
+    const effectiveFee = shopDeliveryFeePayer === "Customer" ? deliveryFee : 0;
     const grandTotal = shopTotal + effectiveFee;
 
     const newOrder = createOrder({
-      date: new Date().toISOString().split('T')[0],
-      time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      date: new Date().toISOString().split("T")[0],
+      time: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
       customerId: order.customerId,
       customerName: order.customerName,
       customerPhone: order.customerPhone,
@@ -319,17 +327,17 @@ export const CustomerPortalView: React.FC<CustomerPortalViewProps> = ({
       total: grandTotal,
       paidAmount: 0,
       advanceAmount: 0,
-      fulfillmentType: 'Delivery',
-      deliveryDistrict: order.deliveryDistrict || 'Hodan',
+      fulfillmentType: "Delivery",
+      deliveryDistrict: order.deliveryDistrict || "Hodan",
       deliveryAddress: order.deliveryAddress,
-      status: 'pending',
-      paymentStatus: 'unpaid',
-      notes: 'Customer reordered via Customer Portal',
+      status: "pending",
+      paymentStatus: "unpaid",
+      notes: "Customer reordered via Customer Portal",
     });
 
     setIsPlacingShopOrder(false);
     setShopCart({});
-    setActiveTab('current');
+    setActiveTab("current");
 
     if (onNavigateToOrder) {
       onNavigateToOrder(newOrder);
@@ -345,13 +353,15 @@ export const CustomerPortalView: React.FC<CustomerPortalViewProps> = ({
     });
   }, [products, shopSearch]);
 
-  const isAdmin = currentUser && currentUser.role !== 'Cashier';
+  const isAdmin = currentUser && currentUser.role !== "Cashier";
 
   return (
     <div
       id="customer-portal-root"
       className={`min-h-screen bg-slate-950 text-slate-100 flex flex-col items-center selection:bg-lime-400 selection:text-slate-950 font-sans ${
-        isStandalone ? 'w-full' : 'w-full max-w-2xl mx-auto rounded-3xl shadow-2xl overflow-hidden my-auto'
+        isStandalone
+          ? "w-full"
+          : "w-full max-w-2xl mx-auto rounded-3xl shadow-2xl overflow-hidden my-auto"
       }`}
     >
       {/* PWA / iOS Install Banner */}
@@ -378,14 +388,23 @@ export const CustomerPortalView: React.FC<CustomerPortalViewProps> = ({
             <span className="font-bold text-lime-400 flex items-center gap-1.5">
               <Sparkles className="w-4 h-4" /> Habka iPhone (iOS)
             </span>
-            <button onClick={() => setShowIosGuide(false)} className="text-slate-400 hover:text-white">
+            <button
+              onClick={() => setShowIosGuide(false)}
+              className="text-slate-400 hover:text-white"
+            >
               <X className="w-4 h-4" />
             </button>
           </div>
           <ol className="list-decimal pl-5 space-y-1 text-slate-300">
-            <li>Guji astaanta <strong>Share</strong> (sanduuqa falladdu ka soo baxdo) ee hoose Safari.</li>
-            <li>Hoos u deg oo taabo <strong>Add to Home Screen (Ku dar shaashadda)</strong>.</li>
-            <li>Taabo <strong>Add</strong> dhanka midig ee sare.</li>
+            <li>
+              Guji astaanta <strong>Share</strong> (sanduuqa falladdu ka soo baxdo) ee hoose Safari.
+            </li>
+            <li>
+              Hoos u deg oo taabo <strong>Add to Home Screen (Ku dar shaashadda)</strong>.
+            </li>
+            <li>
+              Taabo <strong>Add</strong> dhanka midig ee sare.
+            </li>
           </ol>
         </div>
       )}
@@ -402,7 +421,8 @@ export const CustomerPortalView: React.FC<CustomerPortalViewProps> = ({
                 Ma hubtaa inaad ka baxdo lacag bixinta?
               </h3>
               <p className="text-xs text-slate-400 mt-1 leading-relaxed">
-                Dalabkaagu waa diiwaangashan yahay. Mar kasta waad dib ugu soo laaban kartaa linkigan si aad u bixiso ama ula socoto gaarsiinta.
+                Dalabkaagu waa diiwaangashan yahay. Mar kasta waad dib ugu soo laaban kartaa
+                linkigan si aad u bixiso ama ula socoto gaarsiinta.
               </p>
             </div>
             <div className="grid grid-cols-2 gap-3 pt-2">
@@ -438,11 +458,9 @@ export const CustomerPortalView: React.FC<CustomerPortalViewProps> = ({
           <div className="space-y-2">
             <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-900 border border-slate-800 text-[11px] font-bold text-lime-400">
               <Sparkles className="w-3.5 h-3.5" />
-              <span>BANADIR STORE</span>
+              <span>BANADIR ONLINE</span>
             </div>
-            <h1 className="text-2xl font-black text-white tracking-tight">
-              Lacag Bixinta Dalabka
-            </h1>
+            <h1 className="text-2xl font-black text-white tracking-tight">Lacag Bixinta Dalabka</h1>
             <p className="text-xs text-slate-400 font-mono">
               Dalabka: <strong className="text-white">#{order.orderNo}</strong>
             </p>
@@ -514,7 +532,8 @@ export const CustomerPortalView: React.FC<CustomerPortalViewProps> = ({
                     Ma hubtaa inaad ka baxdo lacag bixinta?
                   </h3>
                   <p className="text-xs text-slate-400 mt-1 max-w-xs leading-relaxed">
-                    Waad xiri kartaa si aad u aragto 9-ka marxaladood ee gaarsiinta iyo alaabta. Mar kasta waad dib ugu soo laaban kartaa bixinta lacagta.
+                    Waad xiri kartaa si aad u aragto 9-ka marxaladood ee gaarsiinta iyo alaabta. Mar
+                    kasta waad dib ugu soo laaban kartaa bixinta lacagta.
                   </p>
                 </div>
                 <div className="grid grid-cols-2 gap-3 w-full max-w-xs pt-1">
@@ -543,7 +562,7 @@ export const CustomerPortalView: React.FC<CustomerPortalViewProps> = ({
             {/* Splash Body */}
             <div className="p-5 space-y-4 overflow-y-auto flex-1 text-xs">
               {/* If Payment Was Already Confirmed By Customer */}
-              {order.paymentStatus === 'customer_confirmed' ? (
+              {order.paymentStatus === "customer_confirmed" ? (
                 <div className="text-center py-6 space-y-3">
                   <div className="w-14 h-14 rounded-2xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center mx-auto border border-emerald-500/30">
                     <CheckCircle2 className="w-8 h-8" />
@@ -553,7 +572,17 @@ export const CustomerPortalView: React.FC<CustomerPortalViewProps> = ({
                       Lacag Bixintaada Waa La Gudbiyay!
                     </h3>
                     <p className="text-xs text-slate-400 mt-1 max-w-xs mx-auto leading-relaxed">
-                      Waxaad bixisay <strong className="text-white">${order.customerConfirmedPayment?.amount.toFixed(2) || order.total.toFixed(2)}</strong> via <strong className="text-lime-400">{order.customerConfirmedPayment?.method || 'Mobile Money'}</strong>. Maamulku hadda ayuu xaqiijinayaa.
+                      Waxaad bixisay{" "}
+                      <strong className="text-white">
+                        $
+                        {order.customerConfirmedPayment?.amount.toFixed(2) ||
+                          order.total.toFixed(2)}
+                      </strong>{" "}
+                      via{" "}
+                      <strong className="text-lime-400">
+                        {order.customerConfirmedPayment?.method || "Mobile Money"}
+                      </strong>
+                      . Maamulku hadda ayuu xaqiijinayaa.
                     </p>
                   </div>
                   <button
@@ -563,7 +592,7 @@ export const CustomerPortalView: React.FC<CustomerPortalViewProps> = ({
                     Kala Soco Halka Uu Marayo Dalabkaaga
                   </button>
                 </div>
-              ) : paymentStep === 'confirm_prompt' ? (
+              ) : paymentStep === "confirm_prompt" ? (
                 /* STEP 2: PROMPT TO DIAL USSD */
                 <div className="space-y-4 py-2 text-center animate-in fade-in">
                   <div className="w-12 h-12 rounded-2xl bg-rose-600/20 text-rose-400 flex items-center justify-center mx-auto">
@@ -572,7 +601,11 @@ export const CustomerPortalView: React.FC<CustomerPortalViewProps> = ({
 
                   <div>
                     <h3 className="text-sm font-black text-white leading-relaxed">
-                      Ma rabtaa inaad u dirto Banadir Store <span className="text-lime-400 text-base">${paymentAmountToPay.toFixed(2)}</span>?
+                      Ma rabtaa inaad u dirto Banadir Store{" "}
+                      <span className="text-lime-400 text-base">
+                        ${paymentAmountToPay.toFixed(2)}
+                      </span>
+                      ?
                     </h3>
                     <p className="text-[11px] text-slate-400 mt-1">
                       Dooro adeegga lacag bixinta ee aad isticmaalayso:
@@ -581,20 +614,24 @@ export const CustomerPortalView: React.FC<CustomerPortalViewProps> = ({
 
                   {/* Payment Methods */}
                   <div className="grid grid-cols-3 gap-2 pt-1 text-left">
-                    {(['EVC Plus', 'E-Dahab', 'Jeeb'] as const).map((method) => (
+                    {(["EVC Plus", "E-Dahab", "Jeeb"] as const).map((method) => (
                       <button
                         key={method}
                         type="button"
                         onClick={() => setSelectedMethod(method)}
                         className={`p-2.5 rounded-xl border text-center transition ${
                           selectedMethod === method
-                            ? 'border-lime-400 bg-lime-400/15 text-white ring-1 ring-lime-400 font-bold'
-                            : 'border-slate-800 bg-slate-950 text-slate-400 hover:border-slate-700'
+                            ? "border-lime-400 bg-lime-400/15 text-white ring-1 ring-lime-400 font-bold"
+                            : "border-slate-800 bg-slate-950 text-slate-400 hover:border-slate-700"
                         }`}
                       >
                         <p className="text-xs font-black">{method}</p>
                         <p className="text-[9px] text-slate-400 mt-0.5 font-mono">
-                          {method === 'EVC Plus' ? '*712*' : method === 'E-Dahab' ? '*110*' : '*812*'}
+                          {method === "EVC Plus"
+                            ? "*712*"
+                            : method === "E-Dahab"
+                              ? "*110*"
+                              : "*812*"}
                         </p>
                       </button>
                     ))}
@@ -604,14 +641,14 @@ export const CustomerPortalView: React.FC<CustomerPortalViewProps> = ({
                   <div className="grid grid-cols-2 gap-3 pt-3">
                     <button
                       type="button"
-                      onClick={() => setPaymentStep('idle')}
+                      onClick={() => setPaymentStep("idle")}
                       className="py-3.5 px-4 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-bold transition uppercase tracking-wider"
                     >
                       MAYA (Dib u noqo)
                     </button>
                     <a
                       href={ussdInfo.telUrl}
-                      onClick={() => setPaymentStep('ussd_active')}
+                      onClick={() => setPaymentStep("ussd_active")}
                       className="py-3.5 px-4 rounded-xl bg-lime-400 hover:bg-lime-300 text-slate-950 text-xs font-black transition uppercase tracking-wider flex items-center justify-center gap-1 shadow-lg shadow-lime-400/20"
                     >
                       <span>HAA (Wac Hadda)</span>
@@ -619,7 +656,7 @@ export const CustomerPortalView: React.FC<CustomerPortalViewProps> = ({
                     </a>
                   </div>
                 </div>
-              ) : paymentStep === 'ussd_active' ? (
+              ) : paymentStep === "ussd_active" ? (
                 /* STEP 3: ACTIVE USSD CODE & CONFIRMATION QUESTION */
                 <div className="space-y-4 animate-in fade-in">
                   <div className="flex items-center justify-between">
@@ -629,8 +666,8 @@ export const CustomerPortalView: React.FC<CustomerPortalViewProps> = ({
                     <button
                       type="button"
                       onClick={() => {
-                        setPaymentStep('idle');
-                        setHasCustomerPaidChoice('unanswered');
+                        setPaymentStep("idle");
+                        setHasCustomerPaidChoice("unanswered");
                       }}
                       className="text-[11px] text-slate-400 hover:text-white"
                     >
@@ -649,8 +686,12 @@ export const CustomerPortalView: React.FC<CustomerPortalViewProps> = ({
                         onClick={handleCopyUssd}
                         className="flex items-center gap-1 px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-bold transition"
                       >
-                        {copiedUssd ? <Check className="w-3.5 h-3.5 text-lime-400" /> : <Copy className="w-3.5 h-3.5" />}
-                        <span>{copiedUssd ? 'Waa La Koobiyeeyay' : 'Koobiyee'}</span>
+                        {copiedUssd ? (
+                          <Check className="w-3.5 h-3.5 text-lime-400" />
+                        ) : (
+                          <Copy className="w-3.5 h-3.5" />
+                        )}
+                        <span>{copiedUssd ? "Waa La Koobiyeeyay" : "Koobiyee"}</span>
                       </button>
                       <a
                         href={ussdInfo.telUrl}
@@ -663,20 +704,21 @@ export const CustomerPortalView: React.FC<CustomerPortalViewProps> = ({
                   </div>
 
                   {/* PROMPT REQUIREMENT #14: MA BIXISAY LACAGTA? */}
-                  {hasCustomerPaidChoice === 'unanswered' ? (
+                  {hasCustomerPaidChoice === "unanswered" ? (
                     <div className="p-4 bg-slate-950/90 rounded-2xl border border-slate-800 text-center space-y-3">
                       <h4 className="text-sm font-black text-white uppercase tracking-wide">
                         MA BIXISAY LACAGTA?
                       </h4>
                       <p className="text-[11px] text-slate-400">
-                        Haddii aad teleefankaaga ka dirtay lacagta (${paymentAmountToPay.toFixed(2)} via {selectedMethod}), fadlan dooro:
+                        Haddii aad teleefankaaga ka dirtay lacagta (${paymentAmountToPay.toFixed(2)}{" "}
+                        via {selectedMethod}), fadlan dooro:
                       </p>
 
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-1">
                         <button
                           id="btn-customer-paid-yes"
                           type="button"
-                          onClick={() => setHasCustomerPaidChoice('yes')}
+                          onClick={() => setHasCustomerPaidChoice("yes")}
                           className="py-3 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-black text-xs uppercase tracking-wider flex items-center justify-center gap-1.5 transition shadow-lg shadow-emerald-600/20"
                         >
                           <CheckCircle2 className="w-4 h-4" />
@@ -685,17 +727,18 @@ export const CustomerPortalView: React.FC<CustomerPortalViewProps> = ({
                         <button
                           id="btn-customer-paid-no"
                           type="button"
-                          onClick={() => setHasCustomerPaidChoice('no')}
+                          onClick={() => setHasCustomerPaidChoice("no")}
                           className="py-3 px-4 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-xs uppercase tracking-wider transition"
                         >
                           MAYA
                         </button>
                       </div>
                     </div>
-                  ) : hasCustomerPaidChoice === 'no' ? (
+                  ) : hasCustomerPaidChoice === "no" ? (
                     <div className="p-4 bg-slate-950/90 rounded-2xl border border-amber-500/30 text-center space-y-3">
                       <p className="text-xs text-amber-300 font-medium">
-                        Haddii aadan weli dirin, fadlan garaac koodhka kore ama dib ugu noqo si aad hab kale u doorato.
+                        Haddii aadan weli dirin, fadlan garaac koodhka kore ama dib ugu noqo si aad
+                        hab kale u doorato.
                       </p>
                       <div className="flex items-center justify-center gap-2">
                         <a
@@ -707,7 +750,7 @@ export const CustomerPortalView: React.FC<CustomerPortalViewProps> = ({
                         </a>
                         <button
                           type="button"
-                          onClick={() => setHasCustomerPaidChoice('yes')}
+                          onClick={() => setHasCustomerPaidChoice("yes")}
                           className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold transition"
                         >
                           Hadda Waan Bixiyay
@@ -715,8 +758,8 @@ export const CustomerPortalView: React.FC<CustomerPortalViewProps> = ({
                         <button
                           type="button"
                           onClick={() => {
-                            setPaymentStep('idle');
-                            setHasCustomerPaidChoice('unanswered');
+                            setPaymentStep("idle");
+                            setHasCustomerPaidChoice("unanswered");
                           }}
                           className="px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-medium transition"
                         >
@@ -726,14 +769,17 @@ export const CustomerPortalView: React.FC<CustomerPortalViewProps> = ({
                     </div>
                   ) : (
                     /* Customer selected HAA: show verification form */
-                    <form onSubmit={handleCustomerSubmitPayment} className="space-y-3 pt-2 border-t border-slate-800 animate-in fade-in">
+                    <form
+                      onSubmit={handleCustomerSubmitPayment}
+                      className="space-y-3 pt-2 border-t border-slate-800 animate-in fade-in"
+                    >
                       <div className="flex items-center justify-between">
                         <span className="text-xs font-bold text-emerald-400 flex items-center gap-1">
                           <CheckCircle2 className="w-3.5 h-3.5" /> Faahfaahinta Lacag Bixintaada:
                         </span>
                         <button
                           type="button"
-                          onClick={() => setHasCustomerPaidChoice('unanswered')}
+                          onClick={() => setHasCustomerPaidChoice("unanswered")}
                           className="text-[10px] text-slate-400 hover:text-white"
                         >
                           Beddel doorashada
@@ -789,7 +835,7 @@ export const CustomerPortalView: React.FC<CustomerPortalViewProps> = ({
                         Lambarka Macmiilka (Customer Number)
                       </span>
                       <span className="text-xs font-black text-white font-mono">
-                        {order.customerPhone || order.customerId || 'CUST-WALKIN'}
+                        {order.customerPhone || order.customerId || "CUST-WALKIN"}
                       </span>
                     </div>
                     <div className="text-right">
@@ -798,7 +844,7 @@ export const CustomerPortalView: React.FC<CustomerPortalViewProps> = ({
                       </span>
                       <span className="text-xs font-black text-lime-400 flex items-center justify-end gap-1">
                         <MapPin className="w-3 h-3" />
-                        {order.deliveryDistrict || order.deliveryAddress || 'Muqdisho'}
+                        {order.deliveryDistrict || order.deliveryAddress || "Muqdisho"}
                       </span>
                     </div>
                   </div>
@@ -834,9 +880,16 @@ export const CustomerPortalView: React.FC<CustomerPortalViewProps> = ({
                               {item.productName}
                             </p>
                             <div className="flex items-center gap-2 text-[11px] text-slate-400 mt-0.5">
-                              <span>Tirada: <strong className="text-slate-200">x{item.quantity}</strong></span>
+                              <span>
+                                Tirada: <strong className="text-slate-200">x{item.quantity}</strong>
+                              </span>
                               <span>•</span>
-                              <span>Qiimaha: <strong className="text-slate-200">${item.sellingPrice.toFixed(2)}</strong></span>
+                              <span>
+                                Qiimaha:{" "}
+                                <strong className="text-slate-200">
+                                  ${item.sellingPrice.toFixed(2)}
+                                </strong>
+                              </span>
                             </div>
                           </div>
 
@@ -871,12 +924,14 @@ export const CustomerPortalView: React.FC<CustomerPortalViewProps> = ({
 
                     <div className="flex items-center justify-between">
                       <span className="text-slate-400">Gaarsiinta (Delivery):</span>
-                      {order.deliveryFeePayer === 'Business' || order.deliveryFee === 0 ? (
+                      {order.deliveryFeePayer === "Business" || order.deliveryFee === 0 ? (
                         <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 text-[10px] font-black">
                           <Check className="w-3 h-3" /> FREE DELIVERY
                         </span>
                       ) : (
-                        <span className="font-semibold text-white">${order.deliveryFee.toFixed(2)}</span>
+                        <span className="font-semibold text-white">
+                          ${order.deliveryFee.toFixed(2)}
+                        </span>
                       )}
                     </div>
 
@@ -910,18 +965,22 @@ export const CustomerPortalView: React.FC<CustomerPortalViewProps> = ({
                     <div className="grid grid-cols-2 gap-3">
                       <button
                         type="button"
-                        onClick={() => setPaymentTypeChoice('advance')}
+                        onClick={() => setPaymentTypeChoice("advance")}
                         className={`p-3 rounded-2xl border text-left transition flex flex-col justify-between ${
-                          paymentTypeChoice === 'advance'
-                            ? 'border-lime-400 bg-lime-400/15 text-white ring-1 ring-lime-400'
-                            : 'border-slate-800 bg-slate-950 text-slate-400 hover:border-slate-700'
+                          paymentTypeChoice === "advance"
+                            ? "border-lime-400 bg-lime-400/15 text-white ring-1 ring-lime-400"
+                            : "border-slate-800 bg-slate-950 text-slate-400 hover:border-slate-700"
                         }`}
                       >
                         <span className="text-[10px] font-extrabold uppercase tracking-wide text-lime-400">
                           ADVANCE PAYMENT
                         </span>
                         <span className="text-base font-black text-white mt-1">
-                          ${((remainingBalance > 4 ? Math.ceil(remainingBalance * 0.5) : remainingBalance)).toFixed(2)}
+                          $
+                          {(remainingBalance > 4
+                            ? Math.ceil(remainingBalance * 0.5)
+                            : remainingBalance
+                          ).toFixed(2)}
                         </span>
                         <span className="text-[10px] text-slate-400 mt-0.5">
                           Hormaris Dammaanad ah
@@ -930,11 +989,11 @@ export const CustomerPortalView: React.FC<CustomerPortalViewProps> = ({
 
                       <button
                         type="button"
-                        onClick={() => setPaymentTypeChoice('full')}
+                        onClick={() => setPaymentTypeChoice("full")}
                         className={`p-3 rounded-2xl border text-left transition flex flex-col justify-between ${
-                          paymentTypeChoice === 'full'
-                            ? 'border-lime-400 bg-lime-400/15 text-white ring-1 ring-lime-400'
-                            : 'border-slate-800 bg-slate-950 text-slate-400 hover:border-slate-700'
+                          paymentTypeChoice === "full"
+                            ? "border-lime-400 bg-lime-400/15 text-white ring-1 ring-lime-400"
+                            : "border-slate-800 bg-slate-950 text-slate-400 hover:border-slate-700"
                         }`}
                       >
                         <span className="text-[10px] font-extrabold uppercase tracking-wide text-lime-400">
@@ -943,9 +1002,7 @@ export const CustomerPortalView: React.FC<CustomerPortalViewProps> = ({
                         <span className="text-base font-black text-white mt-1">
                           ${remainingBalance.toFixed(2)}
                         </span>
-                        <span className="text-[10px] text-slate-400 mt-0.5">
-                          Wadarta Guud
-                        </span>
+                        <span className="text-[10px] text-slate-400 mt-0.5">Wadarta Guud</span>
                       </button>
                     </div>
                   </div>
@@ -954,7 +1011,7 @@ export const CustomerPortalView: React.FC<CustomerPortalViewProps> = ({
                   <button
                     id="btn-splash-hadda-bixi"
                     type="button"
-                    onClick={() => setPaymentStep('confirm_prompt')}
+                    onClick={() => setPaymentStep("confirm_prompt")}
                     className="w-full py-4 rounded-2xl bg-rose-600 hover:bg-rose-500 active:scale-[0.99] text-white text-base font-black uppercase tracking-wider transition shadow-xl shadow-rose-600/30 flex items-center justify-center gap-2"
                   >
                     <CreditCard className="w-5 h-5" />
@@ -989,12 +1046,10 @@ export const CustomerPortalView: React.FC<CustomerPortalViewProps> = ({
             </div>
             <div>
               <h1 className="text-sm font-black tracking-tight text-white flex items-center gap-1.5">
-                BANADIR STORE
+                BANADIR ONLINE
                 <span className="w-2 h-2 rounded-full bg-lime-400 animate-pulse" />
               </h1>
-              <span className="text-[11px] font-mono text-slate-400">
-                {order.orderNo}
-              </span>
+              <span className="text-[11px] font-mono text-slate-400">{order.orderNo}</span>
             </div>
           </div>
 
@@ -1016,11 +1071,11 @@ export const CustomerPortalView: React.FC<CustomerPortalViewProps> = ({
         <nav className="flex items-center border-b border-slate-800 bg-slate-900/40 text-xs font-bold px-4">
           <button
             id="tab-current-order"
-            onClick={() => setActiveTab('current')}
+            onClick={() => setActiveTab("current")}
             className={`flex-1 py-3 text-center border-b-2 transition flex items-center justify-center gap-1.5 ${
-              activeTab === 'current'
-                ? 'border-lime-400 text-lime-400'
-                : 'border-transparent text-slate-400 hover:text-slate-200'
+              activeTab === "current"
+                ? "border-lime-400 text-lime-400"
+                : "border-transparent text-slate-400 hover:text-slate-200"
             }`}
           >
             <Package className="w-3.5 h-3.5" />
@@ -1028,11 +1083,11 @@ export const CustomerPortalView: React.FC<CustomerPortalViewProps> = ({
           </button>
           <button
             id="tab-order-history"
-            onClick={() => setActiveTab('history')}
+            onClick={() => setActiveTab("history")}
             className={`flex-1 py-3 text-center border-b-2 transition flex items-center justify-center gap-1.5 ${
-              activeTab === 'history'
-                ? 'border-lime-400 text-lime-400'
-                : 'border-transparent text-slate-400 hover:text-slate-200'
+              activeTab === "history"
+                ? "border-lime-400 text-lime-400"
+                : "border-transparent text-slate-400 hover:text-slate-200"
             }`}
           >
             <Clock className="w-3.5 h-3.5" />
@@ -1045,11 +1100,11 @@ export const CustomerPortalView: React.FC<CustomerPortalViewProps> = ({
           </button>
           <button
             id="tab-continue-shopping"
-            onClick={() => setActiveTab('shop')}
+            onClick={() => setActiveTab("shop")}
             className={`flex-1 py-3 text-center border-b-2 transition flex items-center justify-center gap-1.5 ${
-              activeTab === 'shop'
-                ? 'border-lime-400 text-lime-400'
-                : 'border-transparent text-slate-400 hover:text-slate-200'
+              activeTab === "shop"
+                ? "border-lime-400 text-lime-400"
+                : "border-transparent text-slate-400 hover:text-slate-200"
             }`}
           >
             <ShoppingCart className="w-3.5 h-3.5" />
@@ -1063,7 +1118,7 @@ export const CustomerPortalView: React.FC<CustomerPortalViewProps> = ({
         </nav>
 
         {/* TAB 1: CURRENT ORDER SPLASH FLOW & LIVE TRACKING */}
-        {activeTab === 'current' && (
+        {activeTab === "current" && (
           <div className="p-4 space-y-4">
             {/* Customer & Location Identity Card */}
             <div className="bg-slate-900/90 rounded-2xl p-4 border border-slate-800 space-y-2.5">
@@ -1073,7 +1128,7 @@ export const CustomerPortalView: React.FC<CustomerPortalViewProps> = ({
                     Customer Number
                   </span>
                   <p className="text-sm font-black text-white font-mono">
-                    {order.customerPhone || order.customerId || 'CUST-WALKIN'}
+                    {order.customerPhone || order.customerId || "CUST-WALKIN"}
                   </p>
                 </div>
                 <div className="text-right">
@@ -1082,7 +1137,7 @@ export const CustomerPortalView: React.FC<CustomerPortalViewProps> = ({
                   </span>
                   <div className="flex items-center gap-1 text-lime-400 text-xs font-bold justify-end mt-0.5">
                     <MapPin className="w-3.5 h-3.5" />
-                    <span>{order.deliveryDistrict || order.deliveryAddress || 'Muqdisho'}</span>
+                    <span>{order.deliveryDistrict || order.deliveryAddress || "Muqdisho"}</span>
                   </div>
                 </div>
               </div>
@@ -1123,21 +1178,24 @@ export const CustomerPortalView: React.FC<CustomerPortalViewProps> = ({
 
                     {/* Details */}
                     <div className="flex-1 min-w-0">
-                      <p className="text-xs font-bold text-white truncate">
-                        {item.productName}
-                      </p>
+                      <p className="text-xs font-bold text-white truncate">{item.productName}</p>
                       <div className="flex items-center gap-2 mt-0.5 text-[11px] text-slate-400">
-                        <span>Tirada: <strong className="text-slate-200">x{item.quantity}</strong></span>
+                        <span>
+                          Tirada: <strong className="text-slate-200">x{item.quantity}</strong>
+                        </span>
                         <span>•</span>
-                        <span>Qiimaha: <strong className="text-slate-200">${item.sellingPrice.toFixed(2)}</strong></span>
+                        <span>
+                          Qiimaha:{" "}
+                          <strong className="text-slate-200">
+                            ${item.sellingPrice.toFixed(2)}
+                          </strong>
+                        </span>
                       </div>
                     </div>
 
                     {/* Line Total */}
                     <div className="text-right">
-                      <p className="text-xs font-black text-white">
-                        ${item.total.toFixed(2)}
-                      </p>
+                      <p className="text-xs font-black text-white">${item.total.toFixed(2)}</p>
                       {item.discount && item.discount > 0 ? (
                         <span className="text-[10px] text-emerald-400 block">
                           -${item.discount.toFixed(2)}
@@ -1166,7 +1224,7 @@ export const CustomerPortalView: React.FC<CustomerPortalViewProps> = ({
               {/* Delivery Fee & Free Delivery Badge */}
               <div className="flex items-center justify-between">
                 <span className="text-slate-400">Lacagta Gaarsiinta (Delivery):</span>
-                {order.deliveryFeePayer === 'Business' || order.deliveryFee === 0 ? (
+                {order.deliveryFeePayer === "Business" || order.deliveryFee === 0 ? (
                   <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 text-[11px] font-black tracking-wide">
                     <Check className="w-3 h-3" /> FREE DELIVERY
                   </span>
@@ -1211,7 +1269,7 @@ export const CustomerPortalView: React.FC<CustomerPortalViewProps> = ({
             </div>
 
             {/* PAYMENT STATE NOTICES */}
-            {order.paymentStatus === 'customer_confirmed' && (
+            {order.paymentStatus === "customer_confirmed" && (
               <div className="p-4 rounded-2xl bg-amber-500/15 border border-amber-500/30 text-amber-200 space-y-2">
                 <div className="flex items-start gap-2.5">
                   <Clock className="w-5 h-5 text-amber-400 shrink-0 mt-0.5" />
@@ -1220,14 +1278,17 @@ export const CustomerPortalView: React.FC<CustomerPortalViewProps> = ({
                       Lacag Bixintaada Waa La Helay (Awaiting Verification)
                     </h4>
                     <p className="text-xs text-amber-200/90 mt-0.5 leading-relaxed">
-                      Waxa aad sheegtay inaad bixisay <strong>${order.customerConfirmedPayment?.amount.toFixed(2)}</strong> via <strong>{order.customerConfirmedPayment?.method}</strong>. Maamulka Banadir Store ayaa xaqiijinaya daqiiqado gudahood.
+                      Waxa aad sheegtay inaad bixisay{" "}
+                      <strong>${order.customerConfirmedPayment?.amount.toFixed(2)}</strong> via{" "}
+                      <strong>{order.customerConfirmedPayment?.method}</strong>. Maamulka Banadir
+                      Store ayaa xaqiijinaya daqiiqado gudahood.
                     </p>
                   </div>
                 </div>
               </div>
             )}
 
-            {order.paymentStatus === 'rejected' && (
+            {order.paymentStatus === "rejected" && (
               <div className="p-4 rounded-2xl bg-rose-500/15 border border-rose-500/30 text-rose-200 space-y-2">
                 <div className="flex items-start gap-2.5">
                   <XCircle className="w-5 h-5 text-rose-400 shrink-0 mt-0.5" />
@@ -1236,7 +1297,11 @@ export const CustomerPortalView: React.FC<CustomerPortalViewProps> = ({
                       Lacag Bixinta Lama Xaqiijin (Payment Rejected)
                     </h4>
                     <p className="text-xs text-rose-200/90 mt-0.5 leading-relaxed">
-                      Sababta: <strong>{order.paymentRejectionReason || 'SMS ama tixraac lacageed lama helin.'}</strong>. Fadlan dib u bixi ama la xiriir xafiiska.
+                      Sababta:{" "}
+                      <strong>
+                        {order.paymentRejectionReason || "SMS ama tixraac lacageed lama helin."}
+                      </strong>
+                      . Fadlan dib u bixi ama la xiriir xafiiska.
                     </p>
                   </div>
                 </div>
@@ -1244,85 +1309,87 @@ export const CustomerPortalView: React.FC<CustomerPortalViewProps> = ({
             )}
 
             {/* PAYMENT WORKFLOW BUTTON / SPLASH */}
-            {!isFullyPaid && order.paymentStatus !== 'customer_confirmed' && paymentStep === 'idle' && (
-              <div className="bg-slate-900/90 rounded-2xl p-5 border border-slate-800 space-y-4 shadow-xl">
-                <div className="space-y-1">
-                  <h3 className="text-xs font-black uppercase tracking-wider text-slate-300">
-                    Dooro Qaabka Bixinta Lacagta
-                  </h3>
-                  <p className="text-[11px] text-slate-400">
-                    Dooro hormaris ama bixi wadarta guud si degdeg ah looguugu adeego
-                  </p>
-                </div>
+            {!isFullyPaid &&
+              order.paymentStatus !== "customer_confirmed" &&
+              paymentStep === "idle" && (
+                <div className="bg-slate-900/90 rounded-2xl p-5 border border-slate-800 space-y-4 shadow-xl">
+                  <div className="space-y-1">
+                    <h3 className="text-xs font-black uppercase tracking-wider text-slate-300">
+                      Dooro Qaabka Bixinta Lacagta
+                    </h3>
+                    <p className="text-[11px] text-slate-400">
+                      Dooro hormaris ama bixi wadarta guud si degdeg ah looguugu adeego
+                    </p>
+                  </div>
 
-                <div className="grid grid-cols-2 gap-3">
+                  <div className="grid grid-cols-2 gap-3">
+                    <button
+                      type="button"
+                      onClick={() => setPaymentTypeChoice("advance")}
+                      className={`p-3 rounded-2xl border text-left transition flex flex-col justify-between ${
+                        paymentTypeChoice === "advance"
+                          ? "border-lime-400 bg-lime-400/10 text-white ring-1 ring-lime-400"
+                          : "border-slate-800 bg-slate-950 text-slate-400 hover:border-slate-700"
+                      }`}
+                    >
+                      <span className="text-[11px] font-extrabold uppercase tracking-wide text-lime-400">
+                        ADVANCE PAYMENT
+                      </span>
+                      <span className="text-base font-black text-white mt-1">
+                        $
+                        {(remainingBalance > 4
+                          ? Math.ceil(remainingBalance * 0.5)
+                          : remainingBalance
+                        ).toFixed(2)}
+                      </span>
+                      <span className="text-[10px] text-slate-400 mt-1">Hormaris Dammaanad ah</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => setPaymentTypeChoice("full")}
+                      className={`p-3 rounded-2xl border text-left transition flex flex-col justify-between ${
+                        paymentTypeChoice === "full"
+                          ? "border-lime-400 bg-lime-400/10 text-white ring-1 ring-lime-400"
+                          : "border-slate-800 bg-slate-950 text-slate-400 hover:border-slate-700"
+                      }`}
+                    >
+                      <span className="text-[11px] font-extrabold uppercase tracking-wide text-lime-400">
+                        FULL PAYMENT
+                      </span>
+                      <span className="text-base font-black text-white mt-1">
+                        ${remainingBalance.toFixed(2)}
+                      </span>
+                      <span className="text-[10px] text-slate-400 mt-1">Wadarta Guud</span>
+                    </button>
+                  </div>
+
+                  {/* LARGE RED BOLD BUTTON: HADDA BIXI */}
                   <button
+                    id="btn-hadda-bixi"
                     type="button"
-                    onClick={() => setPaymentTypeChoice('advance')}
-                    className={`p-3 rounded-2xl border text-left transition flex flex-col justify-between ${
-                      paymentTypeChoice === 'advance'
-                        ? 'border-lime-400 bg-lime-400/10 text-white ring-1 ring-lime-400'
-                        : 'border-slate-800 bg-slate-950 text-slate-400 hover:border-slate-700'
-                    }`}
+                    onClick={() => {
+                      setIsPaymentSplashOpen(true);
+                      setPaymentStep("confirm_prompt");
+                    }}
+                    className="w-full py-4 rounded-2xl bg-rose-600 hover:bg-rose-500 active:scale-[0.99] text-white text-base font-black uppercase tracking-wider transition shadow-lg shadow-rose-600/30 flex items-center justify-center gap-2"
                   >
-                    <span className="text-[11px] font-extrabold uppercase tracking-wide text-lime-400">
-                      ADVANCE PAYMENT
-                    </span>
-                    <span className="text-base font-black text-white mt-1">
-                      ${((remainingBalance > 4 ? Math.ceil(remainingBalance * 0.5) : remainingBalance)).toFixed(2)}
-                    </span>
-                    <span className="text-[10px] text-slate-400 mt-1">
-                      Hormaris Dammaanad ah
-                    </span>
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => setPaymentTypeChoice('full')}
-                    className={`p-3 rounded-2xl border text-left transition flex flex-col justify-between ${
-                      paymentTypeChoice === 'full'
-                        ? 'border-lime-400 bg-lime-400/10 text-white ring-1 ring-lime-400'
-                        : 'border-slate-800 bg-slate-950 text-slate-400 hover:border-slate-700'
-                    }`}
-                  >
-                    <span className="text-[11px] font-extrabold uppercase tracking-wide text-lime-400">
-                      FULL PAYMENT
-                    </span>
-                    <span className="text-base font-black text-white mt-1">
-                      ${remainingBalance.toFixed(2)}
-                    </span>
-                    <span className="text-[10px] text-slate-400 mt-1">
-                      Wadarta Guud
-                    </span>
+                    <CreditCard className="w-5 h-5" />
+                    <span>HADDA BIXI (${paymentAmountToPay.toFixed(2)})</span>
+                    <ArrowRight className="w-5 h-5" />
                   </button>
                 </div>
-
-                {/* LARGE RED BOLD BUTTON: HADDA BIXI */}
-                <button
-                  id="btn-hadda-bixi"
-                  type="button"
-                  onClick={() => {
-                    setIsPaymentSplashOpen(true);
-                    setPaymentStep('confirm_prompt');
-                  }}
-                  className="w-full py-4 rounded-2xl bg-rose-600 hover:bg-rose-500 active:scale-[0.99] text-white text-base font-black uppercase tracking-wider transition shadow-lg shadow-rose-600/30 flex items-center justify-center gap-2"
-                >
-                  <CreditCard className="w-5 h-5" />
-                  <span>HADDA BIXI (${paymentAmountToPay.toFixed(2)})</span>
-                  <ArrowRight className="w-5 h-5" />
-                </button>
-              </div>
-            )}
+              )}
 
             {/* PAYMENT STEP 2: SELECT METHOD */}
-            {paymentStep === 'method_select' && (
+            {paymentStep === "method_select" && (
               <div className="bg-slate-900/95 rounded-2xl p-5 border border-slate-800 space-y-4 animate-in fade-in">
                 <div className="flex items-center justify-between">
                   <h3 className="text-xs font-black uppercase tracking-wider text-white">
                     Dooro Habka Lacag Bixinta
                   </h3>
                   <button
-                    onClick={() => setPaymentStep('idle')}
+                    onClick={() => setPaymentStep("idle")}
                     className="text-xs text-slate-400 hover:text-white"
                   >
                     Kansal
@@ -1330,27 +1397,31 @@ export const CustomerPortalView: React.FC<CustomerPortalViewProps> = ({
                 </div>
 
                 <div className="space-y-2">
-                  {(['EVC Plus', 'E-Dahab', 'Jeeb'] as const).map((method) => (
+                  {(["EVC Plus", "E-Dahab", "Jeeb"] as const).map((method) => (
                     <button
                       key={method}
                       onClick={() => {
                         setSelectedMethod(method);
-                        setPaymentStep('confirm_prompt');
+                        setPaymentStep("confirm_prompt");
                       }}
                       className={`w-full p-3.5 rounded-2xl border text-left flex items-center justify-between transition ${
                         selectedMethod === method
-                          ? 'border-lime-400 bg-lime-400/10 text-white'
-                          : 'border-slate-800 bg-slate-950 text-slate-300 hover:border-slate-700'
+                          ? "border-lime-400 bg-lime-400/10 text-white"
+                          : "border-slate-800 bg-slate-950 text-slate-300 hover:border-slate-700"
                       }`}
                     >
                       <div className="flex items-center gap-3">
                         <div className="w-8 h-8 rounded-xl bg-slate-800 flex items-center justify-center font-bold text-lime-400">
-                          {method === 'EVC Plus' ? 'E' : method === 'E-Dahab' ? 'D' : 'J'}
+                          {method === "EVC Plus" ? "E" : method === "E-Dahab" ? "D" : "J"}
                         </div>
                         <div>
                           <p className="text-xs font-bold text-white">{method}</p>
                           <p className="text-[10px] text-slate-400">
-                            {method === 'EVC Plus' ? '*712*' : method === 'E-Dahab' ? '*110*' : '*812*'}
+                            {method === "EVC Plus"
+                              ? "*712*"
+                              : method === "E-Dahab"
+                                ? "*110*"
+                                : "*812*"}
                           </p>
                         </div>
                       </div>
@@ -1362,24 +1433,26 @@ export const CustomerPortalView: React.FC<CustomerPortalViewProps> = ({
             )}
 
             {/* PAYMENT STEP 3: CONFIRMATION PROMPT ("Ma rabtaa inaad u dirto Banadir Store $AMOUNT?") */}
-            {paymentStep === 'confirm_prompt' && (
+            {paymentStep === "confirm_prompt" && (
               <div className="bg-slate-900/95 rounded-2xl p-5 border border-slate-800 space-y-4 text-center animate-in fade-in">
                 <div className="w-12 h-12 rounded-2xl bg-lime-400/10 text-lime-400 flex items-center justify-center mx-auto">
                   <CreditCard className="w-6 h-6" />
                 </div>
                 <div>
                   <h3 className="text-sm font-black text-white leading-relaxed">
-                    Ma rabtaa inaad u dirto Banadir Store <span className="text-lime-400">${paymentAmountToPay.toFixed(2)}</span>?
+                    Ma rabtaa inaad u dirto Banadir Store{" "}
+                    <span className="text-lime-400">${paymentAmountToPay.toFixed(2)}</span>?
                   </h3>
                   <p className="text-xs text-slate-400 mt-1">
-                    Qaabka: <strong>{selectedMethod}</strong> ({paymentTypeChoice === 'advance' ? 'Hormaris' : 'Wadarta Guud'})
+                    Qaabka: <strong>{selectedMethod}</strong> (
+                    {paymentTypeChoice === "advance" ? "Hormaris" : "Wadarta Guud"})
                   </p>
                 </div>
 
                 <div className="grid grid-cols-2 gap-3 pt-2">
                   <button
                     id="btn-confirm-pay-maya"
-                    onClick={() => setPaymentStep('idle')}
+                    onClick={() => setPaymentStep("idle")}
                     className="py-3 px-4 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-bold transition uppercase tracking-wider"
                   >
                     MAYA
@@ -1387,7 +1460,7 @@ export const CustomerPortalView: React.FC<CustomerPortalViewProps> = ({
                   <a
                     id="btn-confirm-pay-haa"
                     href={ussdInfo.telUrl}
-                    onClick={() => setPaymentStep('ussd_active')}
+                    onClick={() => setPaymentStep("ussd_active")}
                     className="py-3 px-4 rounded-xl bg-lime-400 hover:bg-lime-300 text-slate-950 text-xs font-black transition uppercase tracking-wider flex items-center justify-center gap-1 shadow-md shadow-lime-400/20"
                   >
                     <span>HAA</span>
@@ -1398,14 +1471,14 @@ export const CustomerPortalView: React.FC<CustomerPortalViewProps> = ({
             )}
 
             {/* PAYMENT STEP 4: ACTIVE USSD + CONFIRMATION FORM */}
-            {paymentStep === 'ussd_active' && (
+            {paymentStep === "ussd_active" && (
               <div className="bg-slate-900/95 rounded-2xl p-5 border border-slate-800 space-y-4 animate-in fade-in">
                 <div className="flex items-center justify-between">
                   <h3 className="text-xs font-black uppercase tracking-wider text-lime-400 flex items-center gap-1.5">
                     <Smartphone className="w-4 h-4" /> Bixinta USSD ({selectedMethod})
                   </h3>
                   <button
-                    onClick={() => setPaymentStep('idle')}
+                    onClick={() => setPaymentStep("idle")}
                     className="text-xs text-slate-400 hover:text-white"
                   >
                     Dib u noqo
@@ -1423,8 +1496,12 @@ export const CustomerPortalView: React.FC<CustomerPortalViewProps> = ({
                       onClick={handleCopyUssd}
                       className="flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-bold transition"
                     >
-                      {copiedUssd ? <Check className="w-3.5 h-3.5 text-lime-400" /> : <Copy className="w-3.5 h-3.5" />}
-                      <span>{copiedUssd ? 'Waa La Koobiyeeyay' : 'Koobiyee'}</span>
+                      {copiedUssd ? (
+                        <Check className="w-3.5 h-3.5 text-lime-400" />
+                      ) : (
+                        <Copy className="w-3.5 h-3.5" />
+                      )}
+                      <span>{copiedUssd ? "Waa La Koobiyeeyay" : "Koobiyee"}</span>
                     </button>
                     <a
                       href={ussdInfo.telUrl}
@@ -1437,11 +1514,16 @@ export const CustomerPortalView: React.FC<CustomerPortalViewProps> = ({
                 </div>
 
                 <p className="text-[11px] text-slate-400">
-                  Haddii teleefankaagu aanu si toos ah u furin lambarka, fadlan koobiyee koodhka kore oo garaac. Kadib marka aad bixiso, buuxi foomka hoose si maamulku u xaqiijiyo.
+                  Haddii teleefankaagu aanu si toos ah u furin lambarka, fadlan koobiyee koodhka
+                  kore oo garaac. Kadib marka aad bixiso, buuxi foomka hoose si maamulku u
+                  xaqiijiyo.
                 </p>
 
                 {/* Confirmation Form */}
-                <form onSubmit={handleCustomerSubmitPayment} className="space-y-3 pt-2 border-t border-slate-800">
+                <form
+                  onSubmit={handleCustomerSubmitPayment}
+                  className="space-y-3 pt-2 border-t border-slate-800"
+                >
                   <div>
                     <label className="block text-[11px] font-semibold text-slate-400 mb-1">
                       Taleefanka Lacagta Laga Soo Diray *
@@ -1490,7 +1572,7 @@ export const CustomerPortalView: React.FC<CustomerPortalViewProps> = ({
                     <Truck className="w-3.5 h-3.5" /> Darawalka Dalabkaaga
                   </span>
                   <span className="text-[11px] px-2 py-0.5 rounded-full bg-slate-800 text-slate-300">
-                    {order.driverVehicle || 'Mooto/Gaaadhi'}
+                    {order.driverVehicle || "Mooto/Gaaadhi"}
                   </span>
                 </div>
 
@@ -1498,13 +1580,13 @@ export const CustomerPortalView: React.FC<CustomerPortalViewProps> = ({
                   <div>
                     <h4 className="text-sm font-black text-white">{order.driverName}</h4>
                     <p className="text-xs text-slate-400 font-mono mt-0.5">
-                      {order.driverPhone || 'Taleefan lama diiwaangelin'}
+                      {order.driverPhone || "Taleefan lama diiwaangelin"}
                     </p>
                   </div>
                   {order.driverPhone && (
                     <a
                       id="btn-call-driver"
-                      href={`tel:${order.driverPhone.replace(/[^0-9+]/g, '')}`}
+                      href={`tel:${order.driverPhone.replace(/[^0-9+]/g, "")}`}
                       className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-lime-400 hover:bg-lime-300 text-slate-950 text-xs font-black transition shadow-md shadow-lime-400/10"
                     >
                       <Phone className="w-3.5 h-3.5" />
@@ -1534,11 +1616,12 @@ export const CustomerPortalView: React.FC<CustomerPortalViewProps> = ({
               {/* 9-Stage Stepper */}
               <div className="relative pl-6 space-y-4 border-l-2 border-slate-800 ml-2">
                 {trackingStages.map((stage) => {
-                  let dotBg = 'bg-slate-800 border-slate-700 text-slate-500';
+                  let dotBg = "bg-slate-800 border-slate-700 text-slate-500";
                   if (stage.isCompleted) {
-                    dotBg = 'bg-emerald-500 border-emerald-400 text-white';
+                    dotBg = "bg-emerald-500 border-emerald-400 text-white";
                   } else if (stage.isCurrent) {
-                    dotBg = 'bg-lime-400 border-lime-300 text-slate-950 ring-4 ring-lime-400/20 animate-pulse';
+                    dotBg =
+                      "bg-lime-400 border-lime-300 text-slate-950 ring-4 ring-lime-400/20 animate-pulse";
                   }
 
                   return (
@@ -1555,14 +1638,16 @@ export const CustomerPortalView: React.FC<CustomerPortalViewProps> = ({
                         <div className="flex items-center gap-2">
                           <h4
                             className={`text-xs font-extrabold ${
-                              stage.isCurrent ? 'text-lime-400' : stage.isCompleted ? 'text-white' : 'text-slate-500'
+                              stage.isCurrent
+                                ? "text-lime-400"
+                                : stage.isCompleted
+                                  ? "text-white"
+                                  : "text-slate-500"
                             }`}
                           >
                             {stage.labelSomali}
                           </h4>
-                          <span className="text-[10px] text-slate-500">
-                            ({stage.labelEnglish})
-                          </span>
+                          <span className="text-[10px] text-slate-500">({stage.labelEnglish})</span>
                         </div>
                         <p className="text-[11px] text-slate-400 mt-0.5 leading-relaxed">
                           {stage.description}
@@ -1588,11 +1673,11 @@ export const CustomerPortalView: React.FC<CustomerPortalViewProps> = ({
                 </div>
 
                 {/* Pending Verification Banner */}
-                {order.paymentStatus === 'customer_confirmed' && (
+                {order.paymentStatus === "customer_confirmed" && (
                   <div className="p-3.5 rounded-xl bg-amber-500/10 border border-amber-500/30 space-y-3">
                     <div className="text-xs text-amber-200">
-                      <strong>Codsi Lacag Bixin:</strong> Macmiilku wuxuu xaqiijiyay bixinta{' '}
-                      <strong>${order.customerConfirmedPayment?.amount.toFixed(2)}</strong> via{' '}
+                      <strong>Codsi Lacag Bixin:</strong> Macmiilku wuxuu xaqiijiyay bixinta{" "}
+                      <strong>${order.customerConfirmedPayment?.amount.toFixed(2)}</strong> via{" "}
                       <strong>{order.customerConfirmedPayment?.method}</strong>.
                       {order.customerConfirmedPayment?.transactionRef && (
                         <span className="block font-mono text-[11px] text-amber-300 mt-1">
@@ -1629,14 +1714,14 @@ export const CustomerPortalView: React.FC<CustomerPortalViewProps> = ({
                   </label>
                   <select
                     id="select-assign-driver"
-                    value={order.driverId || ''}
+                    value={order.driverId || ""}
                     onChange={(e) => assignDriverToOrder(order.id, e.target.value)}
                     className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-lime-400"
                   >
                     <option value="">-- Dooro Darawal --</option>
                     {drivers.map((d) => (
                       <option key={d.id} value={d.id}>
-                        {d.name} ({d.phone}) - {d.vehicleType || 'Mooto'}
+                        {d.name} ({d.phone}) - {d.vehicleType || "Mooto"}
                       </option>
                     ))}
                   </select>
@@ -1648,19 +1733,21 @@ export const CustomerPortalView: React.FC<CustomerPortalViewProps> = ({
                     Cusbooneysii Marxaladda (Update Fulfillment):
                   </label>
                   <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5 text-xs">
-                    {(['PREPARING', 'READY', 'PICKED_UP', 'IN_TRANSIT', 'DELIVERED'] as const).map((st) => (
-                      <button
-                        key={st}
-                        onClick={() => updateOrderFulfillmentStage(order.id, st)}
-                        className={`py-1.5 px-2 rounded-lg text-[11px] font-bold border transition ${
-                          order.fulfillmentStatus === st
-                            ? 'bg-lime-400 text-slate-950 border-lime-400'
-                            : 'bg-slate-950 text-slate-400 border-slate-800 hover:text-white'
-                        }`}
-                      >
-                        {st}
-                      </button>
-                    ))}
+                    {(["PREPARING", "READY", "PICKED_UP", "IN_TRANSIT", "DELIVERED"] as const).map(
+                      (st) => (
+                        <button
+                          key={st}
+                          onClick={() => updateOrderFulfillmentStage(order.id, st)}
+                          className={`py-1.5 px-2 rounded-lg text-[11px] font-bold border transition ${
+                            order.fulfillmentStatus === st
+                              ? "bg-lime-400 text-slate-950 border-lime-400"
+                              : "bg-slate-950 text-slate-400 border-slate-800 hover:text-white"
+                          }`}
+                        >
+                          {st}
+                        </button>
+                      ),
+                    )}
                   </div>
                 </div>
 
@@ -1671,16 +1758,18 @@ export const CustomerPortalView: React.FC<CustomerPortalViewProps> = ({
                       Dhamaystir Dalabka & Invoice-ka
                     </span>
                     <span className="text-[10px] text-slate-500">
-                      {order.convertedSaleId ? `Waa la beddelay (Sale ID: ${order.convertedSaleId.slice(0, 8)})` : 'Abuur hal Sale oo dhab ah'}
+                      {order.convertedSaleId
+                        ? `Waa la beddelay (Sale ID: ${order.convertedSaleId.slice(0, 8)})`
+                        : "Abuur hal Sale oo dhab ah"}
                     </span>
                   </div>
                   <button
                     id="btn-admin-complete-order"
                     onClick={handleAdminCompleteOrder}
-                    disabled={Boolean(order.convertedSaleId) || order.status === 'Completed'}
+                    disabled={Boolean(order.convertedSaleId) || order.status === "Completed"}
                     className="py-2 px-3 rounded-xl bg-slate-800 hover:bg-slate-700 text-lime-400 border border-slate-700 text-xs font-bold transition disabled:opacity-40"
                   >
-                    {order.convertedSaleId ? 'Waa La Dhamaystiray' : 'Dhamaystir Hadda'}
+                    {order.convertedSaleId ? "Waa La Dhamaystiray" : "Dhamaystir Hadda"}
                   </button>
                 </div>
               </div>
@@ -1689,7 +1778,7 @@ export const CustomerPortalView: React.FC<CustomerPortalViewProps> = ({
         )}
 
         {/* TAB 2: ORDER HISTORY & PREVIOUS PAYMENTS */}
-        {activeTab === 'history' && (
+        {activeTab === "history" && (
           <div className="p-4 space-y-4">
             <div className="flex items-center justify-between">
               <div>
@@ -1713,7 +1802,9 @@ export const CustomerPortalView: React.FC<CustomerPortalViewProps> = ({
                   <div
                     key={ord.id}
                     className={`bg-slate-900/90 rounded-2xl p-4 border transition ${
-                      isCurrent ? 'border-lime-400 ring-1 ring-lime-400/30' : 'border-slate-800 hover:border-slate-700'
+                      isCurrent
+                        ? "border-lime-400 ring-1 ring-lime-400/30"
+                        : "border-slate-800 hover:border-slate-700"
                     }`}
                   >
                     <div className="flex items-center justify-between">
@@ -1738,10 +1829,10 @@ export const CustomerPortalView: React.FC<CustomerPortalViewProps> = ({
                         </span>
                         <span
                           className={`text-[10px] font-bold ${
-                            rem <= 0 ? 'text-emerald-400' : 'text-rose-400'
+                            rem <= 0 ? "text-emerald-400" : "text-rose-400"
                           }`}
                         >
-                          {rem <= 0 ? 'Fully Paid' : `Hadhaa: $${rem.toFixed(2)}`}
+                          {rem <= 0 ? "Fully Paid" : `Hadhaa: $${rem.toFixed(2)}`}
                         </span>
                       </div>
                     </div>
@@ -1769,7 +1860,7 @@ export const CustomerPortalView: React.FC<CustomerPortalViewProps> = ({
         )}
 
         {/* TAB 3: DALBO MAR KALE (CONTINUE SHOPPING E-COMMERCE) */}
-        {activeTab === 'shop' && (
+        {activeTab === "shop" && (
           <div className="p-4 space-y-4">
             <div className="bg-slate-900/90 rounded-2xl p-4 border border-slate-800 space-y-3">
               <div className="flex items-center justify-between">
@@ -1825,9 +1916,7 @@ export const CustomerPortalView: React.FC<CustomerPortalViewProps> = ({
                         <span className="text-xs font-black text-lime-400">
                           ${p.sellingPrice.toFixed(2)}
                         </span>
-                        <span className="text-[10px] text-slate-500">
-                          Kaydka: {p.stock}
-                        </span>
+                        <span className="text-[10px] text-slate-500">Kaydka: {p.stock}</span>
                       </div>
                     </div>
 
@@ -1880,11 +1969,15 @@ export const CustomerPortalView: React.FC<CustomerPortalViewProps> = ({
                   <button
                     type="button"
                     onClick={() =>
-                      setShopDeliveryFeePayer(shopDeliveryFeePayer === 'Customer' ? 'Business' : 'Customer')
+                      setShopDeliveryFeePayer(
+                        shopDeliveryFeePayer === "Customer" ? "Business" : "Customer",
+                      )
                     }
                     className="text-[11px] text-lime-400 font-bold hover:underline"
                   >
-                    {shopDeliveryFeePayer === 'Customer' ? 'Macmiilka ($2.00)' : 'FREE DELIVERY (Ganacsiga)'}
+                    {shopDeliveryFeePayer === "Customer"
+                      ? "Macmiilka ($2.00)"
+                      : "FREE DELIVERY (Ganacsiga)"}
                   </button>
                 </div>
 

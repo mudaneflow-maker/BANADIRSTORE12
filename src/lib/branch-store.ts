@@ -1,7 +1,13 @@
 import { useSyncExternalStore } from "react";
 
 // Branch sales (e.g. Garoowe, Kismaayo): own stock per branch, own sales, fixed commission per sale.
-export type Branch = { id: string; name: string; manager: string; commission: number; createdAt: string };
+export type Branch = {
+  id: string;
+  name: string;
+  manager: string;
+  commission: number;
+  createdAt: string;
+};
 export type BranchSaleItem = {
   productId: string;
   productName: string;
@@ -49,18 +55,26 @@ function read() {
     state = raw ? { ...EMPTY, ...JSON.parse(raw) } : EMPTY;
 
     // Ensure Garoowe branch exists with initial 30 pcs gifted stock
-    if (!state.branches.some((b) => b.name.toLowerCase().includes("garoowe"))) {
-      const garooweBranch: Branch = {
+    let garoowe = state.branches.find((b) => b.name.toLowerCase().includes("garoowe") || b.id === "BR-garoowe");
+    if (!garoowe) {
+      garoowe = {
         id: "BR-garoowe",
         name: "Garoowe",
         manager: "Maamulaha Garoowe",
         commission: 2,
         createdAt: "2026-10-01T00:00:00.000Z",
       };
-      state.branches = [...state.branches, garooweBranch];
-      state.stock["BR-garoowe"] = {
-        ...(state.stock["BR-garoowe"] || {}),
-        "prod-gift-garoowe": state.stock["BR-garoowe"]?.["prod-gift-garoowe"] ?? 30,
+      state.branches = [...state.branches, garoowe];
+    }
+    const garooweId = garoowe.id;
+    const currentGarooweStock = state.stock[garooweId]?.["prod-gift-garoowe"];
+    if (typeof currentGarooweStock !== "number" || currentGarooweStock <= 0) {
+      state.stock = {
+        ...state.stock,
+        [garooweId]: {
+          ...(state.stock[garooweId] || {}),
+          "prod-gift-garoowe": 30,
+        },
       };
       set(state);
     }
@@ -86,7 +100,8 @@ function set(next: BranchState) {
   }
   listeners.forEach((l) => l());
 }
-const uid = (p: string) => `${p}-${Date.now().toString(36)}${Math.random().toString(36).slice(2, 6)}`;
+const uid = (p: string) =>
+  `${p}-${Date.now().toString(36)}${Math.random().toString(36).slice(2, 6)}`;
 export const todayISO = () => new Date().toISOString().slice(0, 10);
 
 export function getBranchState(): BranchState {
@@ -109,16 +124,33 @@ export function addBranch(name: string, manager: string, commission: number) {
   load();
   set({
     ...state,
-    branches: [...state.branches, { id: uid("BR"), name: name.trim(), manager: manager.trim(), commission, createdAt: new Date().toISOString() }],
+    branches: [
+      ...state.branches,
+      {
+        id: uid("BR"),
+        name: name.trim(),
+        manager: manager.trim(),
+        commission,
+        createdAt: new Date().toISOString(),
+      },
+    ],
   });
 }
-export function updateBranch(id: string, patch: Partial<Pick<Branch, "name" | "manager" | "commission">>) {
+export function updateBranch(
+  id: string,
+  patch: Partial<Pick<Branch, "name" | "manager" | "commission">>,
+) {
   load();
   set({ ...state, branches: state.branches.map((b) => (b.id === id ? { ...b, ...patch } : b)) });
 }
 
 /** Move stock to a branch (caller must deduct from main stock). */
-export function addBranchStock(branchId: string, productId: string, productName: string, qty: number) {
+export function addBranchStock(
+  branchId: string,
+  productId: string,
+  productName: string,
+  qty: number,
+) {
   load();
   const bs = { ...(state.stock[branchId] || {}) };
   bs[productId] = (bs[productId] || 0) + qty;
@@ -149,13 +181,34 @@ export function branchQtyByProduct(): Record<string, number> {
   return out;
 }
 
-export function recordBranchSale(branchId: string, items: BranchSaleItem[], notes?: string): string | null {
+/** Detailed list of branches with non-zero stock for a product */
+export function getBranchBreakdownForProduct(
+  productId: string,
+): { branchId: string; branchName: string; qty: number }[] {
+  const st = getBranchState();
+  const branches = st.branches;
+  const out: { branchId: string; branchName: string; qty: number }[] = [];
+  branches.forEach((b) => {
+    const qty = st.stock[b.id]?.[productId] || 0;
+    if (qty > 0) {
+      out.push({ branchId: b.id, branchName: b.name, qty });
+    }
+  });
+  return out;
+}
+
+export function recordBranchSale(
+  branchId: string,
+  items: BranchSaleItem[],
+  notes?: string,
+): string | null {
   load();
   const br = state.branches.find((b) => b.id === branchId);
   if (!br || items.length === 0) return "Dooro branch iyo alaab.";
   const bs = { ...(state.stock[branchId] || {}) };
   for (const it of items) {
-    if ((bs[it.productId] || 0) < it.quantity) return `Stock kuma filna branch-ka: ${it.productName}`;
+    if ((bs[it.productId] || 0) < it.quantity)
+      return `Stock kuma filna branch-ka: ${it.productName}`;
   }
   items.forEach((it) => (bs[it.productId] = (bs[it.productId] || 0) - it.quantity));
   const total = items.reduce((s, i) => s + i.quantity * i.unitPrice, 0);
